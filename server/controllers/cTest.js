@@ -9,6 +9,13 @@ module.exports = (function(){
             msg: "Recieved params[id]: " + req.params.id
           }
         );
+      },
+      test_post: function(req, res){
+        res.status(200).json(
+          {
+            name: req.body.name
+          }
+        );
       }
     }
 })();

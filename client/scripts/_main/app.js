@@ -21,6 +21,11 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     templateUrl: 'partials/home.html',
     data: { requiresLogin: true }
   })
+  .state('test', {
+    url: '/test',
+    controller: 'homeCtrl',
+    templateUrl: 'partials/test.html'
+  })
   .state('about', {
     url: '/about',
     templateUrl: 'partials/about.html'
