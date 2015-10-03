@@ -17,29 +17,55 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
   $stateProvider
   .state('home',{
     url: '/',
-    controller: 'homeCtrl',
-    templateUrl: 'partials/home.html',
+    views: {
+      "nav_top": {
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/home.html"
+      }
+    },
     data: { requiresLogin: true }
   })
   .state('test', {
     url: '/test',
-    controller: 'homeCtrl',
-    templateUrl: 'partials/test.html'
+    views: {
+      "nav_top": {
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/test.html"
+      }
+    }
   })
   .state('about', {
     url: '/about',
-    templateUrl: 'partials/about.html'
+    views: {
+      "nav_top": {
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/about.html"
+      }
+    }
   })
-  .state('login', { 
-    url: '/login', 
-    templateUrl: 'partials/login.html', 
-    controller: 'loginCtrl' 
+  .state('login', {
+    url: '/login',
+    views: {
+      "main": {
+        controller: 'loginCtrl',
+        templateUrl: "partials/login.html"
+      }
+    }
   })
-  // .state('userInfo', { 
-  //   url: '/userInfo', 
-  //   templateUrl: 'partials/userInfo.html', 
+  // .state('userInfo', {
+  //   url: '/userInfo',
+  //   templateUrl: 'partials/userInfo.html',
   //   controller: 'userInfoCtrl',
-  //   requiresLogin: true 
+  //   requiresLogin: true
   // })
 
   $urlRouterProvider.otherwise('/');
