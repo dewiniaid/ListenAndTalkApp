@@ -1,8 +1,8 @@
 # Listen and Talk Web App
 Web Application for Listen And Talk
 
-# Development Tips
-## Install Tools
+# Development
+## 1. Install Tools
 
 For Mac OS
 ```
@@ -16,27 +16,28 @@ For Windows
 ```
 npm install -g grunt-cli
 npm install -g bower
+npm install -g nodemon
 ```
 
-## Update dependencies before you run
+## 2. Update dependencies before you run
 Run the following command
 ```
 npm install && bower install && grunt default
 ```
 
-## To Run
+## 3. To Run
 Run the following command
 ```
 nodemon server.js
 ```
 
-## If you have added new dependency
+## [Optional] If you have added new dependency
 Run the following command
 ```
 grunt default
 ```
 
-## Clean Before Commit
+## [Optional] Clean Before Commit
 Run the following command
 ```
 grunt clean
