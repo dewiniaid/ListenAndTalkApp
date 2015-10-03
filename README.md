@@ -7,8 +7,9 @@ Web Application for Listen And Talk
 For Mac OS
 ```
 brew install node
-npm install -g grunt-cli
-npm install -g bower
+sudo npm install -g grunt-cli
+sudo npm install -g bower
+sudo npm install -g nodemon
 ```
 
 For Windows
