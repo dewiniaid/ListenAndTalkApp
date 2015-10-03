@@ -1,9 +1,8 @@
-﻿-- PostgreSQL-ish, but- 44this is easily changed.
-ROLLBACK; BEGIN; 
+﻿-- PostgreSQL-ish, but this is easily changed.
+SET SESSION AUTHORIZATION developer;
 DROP SCHEMA listenandtalk CASCADE;
 CREATE SCHEMA listenandtalk;
 GRANT ALL PRIVILEGES ON SCHEMA listenandtalk TO developer;
-SET SESSION AUTHORIZATION developer;
 SET SEARCH_PATH=listenandtalk, public;
 
 
