@@ -19,7 +19,8 @@
     "angular-strap": "~2.3.1",
     "angular-animate": "~1.4.3",
     "ui-router": "~0.2.15",
-    "angular-motion": "~0.4.2"
+    "angular-motion": "~0.4.2",
+    "angular-jwt": "*"
   },
   "overrides": {
     "bootstrap": {
@@ -54,6 +55,11 @@
       "main": [
         "dist/angular-strap.min.js",
         "dist/angular-strap.tpl.min.js"
+      ]
+    },
+    "angular-jwt": {
+      "main": [
+        "dist/angular-jwt.min.js"
       ]
     }
   }
