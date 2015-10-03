@@ -25,7 +25,9 @@ CREATE TABLE teacher (
 	name_first VARCHAR NOT NULL,
 	name_last VARCHAR NOT NULL,
 	date_deleted TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this teacher is "deleted"; date is for future use in case we want to purge records from X years ago.
-	
+
+	can_login BOOLEAN NOT NULL DEFAULT TRUE,	-- Don't allow teachers without this to login
+	email VARCHAR NULL,	-- Teacher email address for OAuth login.
 	-- TODO: Accounts, which might potentially need to be its own table.
 	-- If using OAuth, this may just be an email address
 	
