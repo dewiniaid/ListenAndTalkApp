@@ -21,6 +21,9 @@ module.exports = function(app) {
   app.put('/api/v1/students/:id', function(req, res){
     students.putStudentById(req, res);
   });
+  app.put('/api/v1/students/:id', function(req, res){
+    students.putStudentById(req, res);
+  });
   app.post('/api/v1/students', function(req, res){
     students.addNewStudent(req, res);
   });
@@ -43,5 +46,5 @@ module.exports = function(app) {
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
   });
-  
+
 };

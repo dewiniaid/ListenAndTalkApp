@@ -27,7 +27,7 @@ module.exports = (function(){
       getAllStudentsByActivityAndDate : function(req, res){
         var activityId = req.params('activityId');
         var date = req.params('date');
-        var query = db.getAllStudentsByActivityAndDateQuery(activityId, date);        
+        var query = db.getAllStudentsByActivityAndDateQuery(activityId, date);
         db.query(query, function(result){
           res.status(200).json(result);
         });
@@ -40,7 +40,6 @@ module.exports = (function(){
         db.query(query, function(result){
           res.status(200).json(result);
         });
-      },
-
+      }
     }
 })();
