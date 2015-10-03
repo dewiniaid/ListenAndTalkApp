@@ -1,5 +1,11 @@
--- PostgreSQL-ish, but this is easily changed.
+﻿-- PostgreSQL-ish, but this is easily changed.
 -- Syntax not yet checked.
+
+DROP SCHEMA listenandtalk CASCADE;
+CREATE SCHEMA listenandtalk;
+GRANT ALL PRIVILEGES ON SCHEMA listenandtalk TO developer;
+SET SESSION AUTHORIZATION developer;
+SET SEARCH_PATH=listenandtalk, public;
 
 
 
@@ -51,36 +57,6 @@ CREATE TABLE attendance_status (
 
 
 
-CREATE TABLE attendance (
-	-- NOTE: This system does not currently handle any notion of multiple checkins in a particular class per day
-	-- This may or may not matter, we should discuss this.
-	-- (If a student leaves a class partway through to go to another class, and then returns, should they be re-checked-in?)
-	
-	-- ASSUMPTIONS:
-	-- An attendance entry is expected for a class for a particular day if all of the below conditions are met:
-	-- a) The class meets on that day
-	-- b) The student's enrollment in the class overlaps the class time
-	
-	-- A student MAY have an attendance entry for a class, even if the above conditions are not met.  This can happen if
-	-- a) It's a drop-in class, and the student is a drop-in.
-	-- b) Attendance was entered, but then the student was dropped.  (e.g. a prearranged absence in the future.)
-	--
-	-- In the case of a), we probably want to still include this record on any reporting.
-	-- In the case of b), we probably don't want to include this record because we don't care if a student was going to be 
-	-- ... on vacation next week if they're no longer attending.
-	
-	student_id INT NOT NULL,
-	course_id INT NOT NULL,
-	date DATE NOT NULL,
-	status_id INT NOT NULL,
-	
-	PRIMARY KEY(student_id, course_id, date)
-	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE
-);
-
-
-
 CREATE TABLE course (  -- Because 'class' is a terrible name from a software development perspective.  Also called a "Roster"
 	id SERIAL NOT NULL,
 	name TEXT NOT NULL,
@@ -123,6 +99,36 @@ CREATE TABLE course_session (
 	start_time TIMESTAMP WITH TIME ZONE NOT NULL,
 	end_time  TIMESTAMP WITH TIME ZONE NOT NULL,
 
-	PRIMARY KEY(course_id, date)
+	PRIMARY KEY(course_id, date),
+	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE attendance (
+	-- NOTE: This system does not currently handle any notion of multiple checkins in a particular class per day
+	-- This may or may not matter, we should discuss this.
+	-- (If a student leaves a class partway through to go to another class, and then returns, should they be re-checked-in?)
+	
+	-- ASSUMPTIONS:
+	-- An attendance entry is expected for a class for a particular day if all of the below conditions are met:
+	-- a) The class meets on that day
+	-- b) The student's enrollment in the class overlaps the class time
+	
+	-- A student MAY have an attendance entry for a class, even if the above conditions are not met.  This can happen if
+	-- a) It's a drop-in class, and the student is a drop-in.
+	-- b) Attendance was entered, but then the student was dropped.  (e.g. a prearranged absence in the future.)
+	--
+	-- In the case of a), we probably want to still include this record on any reporting.
+	-- In the case of b), we probably don't want to include this record because we don't care if a student was going to be 
+	-- ... on vacation next week if they're no longer attending.
+	
+	student_id INT NOT NULL,
+	course_id INT NOT NULL,
+	date DATE NOT NULL,
+	status_id INT NOT NULL,
+	
+	PRIMARY KEY(student_id, course_id, date),
+	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
