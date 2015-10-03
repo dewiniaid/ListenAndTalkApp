@@ -27,7 +27,8 @@ CREATE TABLE teacher (
 	date_deleted TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this teacher is "deleted"; date is for future use in case we want to purge records from X years ago.
 
 	can_login BOOLEAN NOT NULL DEFAULT TRUE,	-- Don't allow teachers without this to login
-	email VARCHAR NULL,	-- Teacher email address for OAuth login.
+	email VARCHAR NULL, 	
+	-- Teacher email address for OAuth login.
 	-- TODO: Accounts, which might potentially need to be its own table.
 	-- If using OAuth, this may just be an email address
 	
@@ -85,6 +86,20 @@ CREATE TABLE course (  -- Because 'class' is a terrible name from a software dev
 	FOREIGN KEY(teacher_id) REFERENCES teacher(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 	FOREIGN KEY(location_id) REFERENCES location(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 	FOREIGN KEY(default_attendance_status_id) REFERENCES attendance_status(id) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+
+
+CREATE TABLE course_enrollment (
+	id INT SERIAL NOT NULL,
+	course_id INT NOT NULL,
+	student_id INT NOT NULL,
+	start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+	end_time TIMESTAMP WITH TIME ZONE NULL,
+
+	PRIMARY KEY(id),
+	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 
