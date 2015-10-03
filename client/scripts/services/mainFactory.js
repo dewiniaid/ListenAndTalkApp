@@ -1,6 +1,6 @@
 var app = angular.module('app');
 
-app.factory('mainFactory', function($http, Restangular, $window){
+app.factory('mainFactory', function ($http, Restangular, $window){
   var factory = {};
 
   factory.test = function(callback) {
