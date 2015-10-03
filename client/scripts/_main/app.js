@@ -1,9 +1,10 @@
-var app = angular.module('app', ['ui.router', 'mgcrea.ngStrap', 'ngAnimate']);
+var app = angular.module('app', ['ui.router', 'mgcrea.ngStrap', 'ngAnimate', 'restangular']);
 
 app.config(function($stateProvider, $urlRouterProvider){
   $stateProvider
   .state('home',{
     url: '/',
+    controller: 'homeCtrl',
     templateUrl: 'partials/home.html'
   })
   .state('about', {
