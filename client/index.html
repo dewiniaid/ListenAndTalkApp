@@ -2,23 +2,22 @@
   <head>
     <title>Home</title>
 
+    <!-- AUTO-GENERATED, DO NOT MODIFY -->
     <!-- bower:css -->
     <link rel="stylesheet" href="vendor/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css" />
     <link rel="stylesheet" href="vendor/bootstrap-social/bootstrap-social.css" />
     <link rel="stylesheet" href="vendor/angular-motion/dist/angular-motion.css" />
     <!-- endbower -->
-
     <!-- injector:css -->
     <link rel="stylesheet" href="/stylesheets/main.css">
     <!-- endinjector -->
-
-
-
-
+    <!-- end : AUTO-GENERATED, DO NOT MODIFY -->
   </head>
 
   <body ng-app='app'>
+
+    <!-- More details in navCtrl.js -->
     <nav class="navbar navbar-default" ng-controller="navCtrl" ng-init="init()">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -34,8 +33,10 @@
       </div>
     </nav>
 
+    <!-- Render Partials: More in scripts/_main/app.js -->
     <div ui-view="" ></div>
 
+    <!-- AUTO-GENERATED, DO NOT MODIFY -->
     <!-- bower:js -->
     <script src="vendor/jquery/dist/jquery.min.js"></script>
     <script src="vendor/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -45,8 +46,9 @@
     <script src="vendor/angular-animate/angular-animate.min.js"></script>
     <script src="vendor/ui-router/release/angular-ui-router.js"></script>
     <script src="vendor/angular-jwt/dist/angular-jwt.min.js"></script>
+    <script src="vendor/lodash/lodash.js"></script>
+    <script src="vendor/restangular/dist/restangular.min.js"></script>
     <!-- endbower -->
-
     <!-- injector:js -->
     <script src="/scripts/_main/app.js"></script>
     <script src="/scripts/controllers/homeCtrl.js"></script>
@@ -54,7 +56,6 @@
     <script src="/scripts/controllers/navCtrl.js"></script>
     <script src="/scripts/services/mainFactory.js"></script>
     <!-- endinjector -->
-
 
     <!-- Auth0 -->
     <!-- We use client cookies to save the user credentials -->
@@ -70,5 +71,6 @@
     <!-- Setting the right viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <!-- end Auth0 -->
+    <!-- end : AUTO-GENERATED, DO NOT MODIFY -->
   </body>
 </html>

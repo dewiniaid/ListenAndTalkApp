@@ -1,4 +1,4 @@
-var app = angular.module('app', ['ui.router', 'mgcrea.ngStrap', 'ngAnimate', 'auth0', 'angular-storage', 'angular-jwt']);
+var app = angular.module('app', ['ui.router', 'mgcrea.ngStrap', 'ngAnimate', 'restangular', 'auth0', 'angular-storage', 'angular-jwt']);
 
 app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvider, jwtInterceptorProvider){
   authProvider.init({
@@ -17,8 +17,8 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
   $stateProvider
   .state('home',{
     url: '/',
-    templateUrl: 'partials/home.html',
-    controller: 'homeCtrl'
+    controller: 'homeCtrl',
+    templateUrl: 'partials/home.html'
   })
   .state('about', {
     url: '/about',

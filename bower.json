@@ -20,7 +20,8 @@
     "angular-animate": "~1.4.3",
     "ui-router": "~0.2.15",
     "angular-motion": "~0.4.2",
-    "angular-jwt": "*"
+    "angular-jwt": "*",
+    "restangular": "~1.5.1"
   },
   "overrides": {
     "bootstrap": {
@@ -60,6 +61,11 @@
     "angular-jwt": {
       "main": [
         "dist/angular-jwt.min.js"
+      ]
+    },
+    "restangular": {
+      "main": [
+        "dist/restangular.min.js"
       ]
     }
   }
