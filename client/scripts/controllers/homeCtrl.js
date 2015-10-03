@@ -1,6 +1,10 @@
 var app = angular.module('app');
 
-app.controller('homeCtrl', function($scope, mainFactory, $window) {
+app.controller('homeCtrl', function($scope, mainFactory, auth, $window) {
+  console.log('test');
+  $scope.auth = auth;
+	console.log(auth);
+  
   mainFactory.test(function(result) {
     $scope.test = result;
   });
