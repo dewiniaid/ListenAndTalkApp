@@ -34,3 +34,9 @@ Run the following command
 ```
 grunt clean
 ```
+
+## To Run
+Run the following command
+```
+nodemon server.js
+```
