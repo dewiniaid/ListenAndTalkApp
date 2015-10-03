@@ -1,0 +1,60 @@
+{
+  "name": "ListenAndTalk",
+  "version": "1.0.0",
+  "authors": [
+    "Jack Chang <wei0831@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "3.3.4",
+    "angular": "~1.4.3",
+    "bootstrap-social": "~4.9.1",
+    "angular-strap": "~2.3.1",
+    "angular-animate": "~1.4.3",
+    "ui-router": "~0.2.15",
+    "angular-motion": "~0.4.2"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "dist/js/bootstrap.min.js",
+        "dist/css/bootstrap.min.css",
+        "dist/fonts/*.*"
+      ]
+    },
+    "angular": {
+      "main": [
+        "angular.min.js"
+      ]
+    },
+    "font-awesome": {
+      "main": [
+        "css/font-awesome.min.css",
+        "fonts/*.*"
+      ]
+    },
+    "jquery": {
+      "main": [
+        "dist/jquery.min.js"
+      ]
+    },
+    "angular-animate": {
+      "main": [
+        "angular-animate.min.js"
+      ]
+    },
+    "angular-strap": {
+      "main": [
+        "dist/angular-strap.min.js",
+        "dist/angular-strap.tpl.min.js"
+      ]
+    }
+  }
+}
