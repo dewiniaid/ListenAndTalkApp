@@ -18,10 +18,16 @@ npm install -g grunt-cli
 npm install -g bower
 ```
 
-## Update dependencies
+## Update dependencies before you run
 Run the following command
 ```
 npm install && bower install && grunt default
+```
+
+## To Run
+Run the following command
+```
+nodemon server.js
 ```
 
 ## If you have added new dependency
@@ -34,10 +40,4 @@ grunt default
 Run the following command
 ```
 grunt clean
-```
-
-## To Run
-Run the following command
-```
-nodemon server.js
 ```
