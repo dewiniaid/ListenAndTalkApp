@@ -3,8 +3,13 @@ var students = require("../server/controllers/students.js");
 var teachers = require("../server/controllers/teachers.js");
 
 module.exports = function(app) {
+  // /api/test
   app.get('/api/test', function(req, res) {
     test.test(req, res);
+  });
+  // api/test_params/1
+  app.get('/api/test_params/:id', function(req, res) {
+    test.test_params(req, res);
   });
   app.get('/api/v1/students', function(req, res){
     students.getAllStudents(req, res);
