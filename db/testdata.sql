@@ -17,11 +17,11 @@ VALUES
 	('Deleted', 'Student')
 RETURNING *;
 
-UPDATE student SET date_deleted='now' WHERE name_first='Deleted';
+UPDATE student SET date_inactive='now' WHERE name_first='Deleted';
 
 
 
-INSERT INTO teacher (name_first, name_last) 
+INSERT INTO staff (name_first, name_last) 
 VALUES 
 	('Kevin', 'OBrien'),
 	('Suzanne', 'Quigley'),
@@ -29,7 +29,7 @@ VALUES
 	('Deleted', 'Teacher')
 RETURNING *;
 
-UPDATE teacher SET date_deleted='now' WHERE name_first='Deleted';
+UPDATE staff SET date_inactive='now' WHERE name_first='Deleted';
 
 -- Attendance statuses.
 -- Probably production data too.
@@ -37,8 +37,10 @@ INSERT INTO attendance_status (name)
 VALUES
 	('Present'), 
 	('Absent'),
-	('Excused'),
-	('Not Expected')
+	('Absent - Excused') -- ,
+	-- ('Not Expected')
 ;
 
 -- Rest of this is waiting on finalizing the course/location/roster/whatever paradigm.
+
+select 1+1;

@@ -1,4 +1,4 @@
-﻿-- PostgreSQL-ish, but this is easily changed.
+﻿-- PostgreSQL-ish, but- this is easily changed.
 -- Syntax not yet checked.
 
 DROP SCHEMA listenandtalk CASCADE;
@@ -14,24 +14,26 @@ CREATE TABLE student (
 	name_first VARCHAR NOT NULL,
 	name_last VARCHAR NOT NULL,
 
-	date_deleted TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this student is "deleted"; date is for future use in case we want to purge records from X years ago.
+	date_inactive TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this student is "deleted"; date is for future use in case we want to purge records from X years ago.
+	date_created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY(id)
 );
 
 
 
-CREATE TABLE teacher (
+CREATE TABLE staff (
 	id SERIAL NOT NULL,
 	name_first VARCHAR NOT NULL,
 	name_last VARCHAR NOT NULL,
-	date_deleted TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this teacher is "deleted"; date is for future use in case we want to purge records from X years ago.
+
+	date_inactive TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this student is "deleted"; date is for future use in case we want to purge records from X years ago.
+	date_created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
 	can_login BOOLEAN NOT NULL DEFAULT TRUE,	-- Don't allow teachers without this to login
 	email VARCHAR NULL, 	
 	-- Teacher email address for OAuth login.
 	-- TODO: Accounts, which might potentially need to be its own table.
 	-- If using OAuth, this may just be an email address
-	
 	PRIMARY KEY(id)
 );
 
@@ -60,50 +62,57 @@ CREATE TABLE attendance_status (
 
 
 
-CREATE TABLE course (  -- Because 'class' is a terrible name from a software development perspective.  Also called a "Roster"
+CREATE TABLE activity (  -- Sometimes also called a "Roster"
 	id SERIAL NOT NULL,
 	name TEXT NOT NULL,
 
-	teacher_id INT NOT NULL,
+	staff_id INT NOT NULL,
 	location_id INT NOT NULL,
 	
 	-- TODO: Track when this class is (so we know when the rostering information is useful)
-	start_date DATE NOT NULL,
-	end_date DATE NOT NULL,
+	start_date DATE NOT NULL, -- First possible date of this class
+	end_date DATE NOT NULL,	-- Last possible date of this class.
+
+	-- start_time TIME NOT NULL, --- 
+	-- end_time TIME NOT NULL,
+
 	-- date_range DATERANGE NOT NULL, 
 	-- PostgreSQL has some built-in capabilities for handling ranges more efficiently, but this may be overkill.
 	-- I usually maintain this field for efficient querying, but have it updated by trigger -- so backend only
 	-- needs to reference it (and the slightly arcane syntax) when it's useful to do so.
 	
-	-- Course behavior options
-	default_attendance_status_id INT NULL,  -- For special classes where we want a particular attendance status to be the default assumption.
+	-- activity behavior options
+	-- default_attendance_status_id INT NULL,  -- For special classes where we want a particular attendance status to be the default assumption.
 	allow_dropins BOOLEAN NOT NULL DEFAULT FALSE,	-- "Drop-in" classes don't maintain a roster, but instead allow an ad-hoc selection 
 	-- of a particular student + attendance status.
 	
-	date_deleted TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this course is "deleted"; date is for future use in case we want to purge records from X years ago.
+	date_inactive TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this student is "deleted"; date is for future use in case we want to purge records from X years ago.
 
 	PRIMARY KEY(id),
-	FOREIGN KEY(teacher_id) REFERENCES teacher(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-	FOREIGN KEY(location_id) REFERENCES location(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-	FOREIGN KEY(default_attendance_status_id) REFERENCES attendance_status(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	FOREIGN KEY(staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY(location_id) REFERENCES location(id) ON UPDATE CASCADE ON DELETE RESTRICT
+--	FOREIGN KEY(default_attendance_status_id) REFERENCES attendance_status(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 
 
-CREATE TABLE course_enrollment (
-	id INT SERIAL NOT NULL,
-	course_id INT NOT NULL,
+CREATE TABLE activity_enrollment (
+	-- The set of all activity_enrollment records for a given activity overlapping today's date is the roster for today.
+	-- (SELECT ... FROM activity_enrollment WHERE ... AND ('now' BETWEEN start_time AND end_time) 
+	id SERIAL NOT NULL,
+	activity_id INT NOT NULL,
 	student_id INT NOT NULL,
-	start_time TIMESTAMP WITH TIME ZONE NOT NULL,
-	end_time TIMESTAMP WITH TIME ZONE NULL,
-
+	start_time DATE NOT NULL,
+	end_time DATE NULL,
+		
 	PRIMARY KEY(id),
-	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 
-
+/*
+-- Ignore this table for now.
 CREATE TABLE course_session (
 	-- Tracks an individual session of a course.  (e.g. Monday of this week, vs Monday of next week.)
 	-- This table can be generated by database trigger based on some criteria; think of it as a materialized view
@@ -111,23 +120,23 @@ CREATE TABLE course_session (
 	--
 	-- Trigger procedures may potentially implement this by bulk-deleting/recreating portions of the table.
 	-- Thus, nothing should reference this via foreign key.
-	course_id INT NOT NULL,
+	activity_id INT NOT NULL,
 	date DATE NOT NULL,
 	start_time TIMESTAMP WITH TIME ZONE NOT NULL,
 	end_time  TIMESTAMP WITH TIME ZONE NOT NULL,
 
-	PRIMARY KEY(course_id, date),
-	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE
+	PRIMARY KEY(activity_id, date),
+	FOREIGN KEY(activity_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+*/
 
 
-
-CREATE TABLE attendance (
+CREATE TABLE attendance ( -- aka "Checkin"
 	-- NOTE: This system does not currently handle any notion of multiple checkins in a particular class per day
 	-- This may or may not matter, we should discuss this.
 	-- (If a student leaves a class partway through to go to another class, and then returns, should they be re-checked-in?)
 	
-	-- ASSUMPTIONS:
+	-- ASSUMPTIONS: (old)
 	-- An attendance entry is expected for a class for a particular day if all of the below conditions are met:
 	-- a) The class meets on that day
 	-- b) The student's enrollment in the class overlaps the class time
@@ -139,13 +148,13 @@ CREATE TABLE attendance (
 	-- In the case of a), we probably want to still include this record on any reporting.
 	-- In the case of b), we probably don't want to include this record because we don't care if a student was going to be 
 	-- ... on vacation next week if they're no longer attending.
-	
 	student_id INT NOT NULL,
-	course_id INT NOT NULL,
+	activity_id INT NOT NULL,
 	date DATE NOT NULL,
 	status_id INT NOT NULL,
-	
-	PRIMARY KEY(student_id, course_id, date),
+	comment TEXT NULL, -- Optional
+	date_entered TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY(student_id, activity_id, date),
 	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY(course_id) REFERENCES course(id) ON UPDATE CASCADE ON DELETE CASCADE
+	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
