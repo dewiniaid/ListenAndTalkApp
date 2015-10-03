@@ -1,4 +1,27 @@
-﻿SET search_path=listenandtalk,public;
+﻿ROLLBACK; BEGIN;
+SET search_path=listenandtalk,public;
+SET SESSION AUTHORIZATION developer;
+
+-- Attendance statuses.
+-- Probably production data too.
+INSERT INTO attendance_status (name)
+VALUES
+	('Present'), 
+	('Absent'),
+	('Absent - Excused') -- ,
+	-- ('Not Expected')
+RETURNING *;
+;
+
+-- Activity categories
+INSERT INTO category (name) 
+VALUES 
+	('Class'),
+	('Therapy'),
+	('Extra-Curricular')
+RETURNING *;
+
+
 
 INSERT INTO student (name_first, name_last)
 VALUES 
@@ -31,16 +54,32 @@ RETURNING *;
 
 UPDATE staff SET date_inactive='now' WHERE name_first='Deleted';
 
--- Attendance statuses.
--- Probably production data too.
-INSERT INTO attendance_status (name)
-VALUES
-	('Present'), 
-	('Absent'),
-	('Absent - Excused') -- ,
-	-- ('Not Expected')
-;
 
--- Rest of this is waiting on finalizing the course/location/roster/whatever paradigm.
 
-select 1+1;
+INSERT INTO location (name) 
+SELECT name_first || E'\'s Room' FROM staff
+RETURNING *;
+
+
+
+INSERT INTO activity (name, staff_id, location_id, category_id, start_date, end_date)
+SELECT 
+	t.name_first || E'\'s Class',
+	t.id,
+	(SELECT id FROM location WHERE name=(t.name_first || E'\'s Room')), --'
+	(SELECT id FROM category WHERE name='Class'),
+	NOW() - '60 days'::interval,
+	NOW() + '60 days'::interval
+FROM
+	staff AS t
+RETURNING *;
+
+
+
+INSERT INTO activity_enrollment (activity_id, student_id, start_time, end_time)
+SELECT a.id, s.id, '-infinity', CASE WHEN ((a.id+s.id)%10)::BOOLEAN THEN NULL::date ELSE 'now'::date END
+FROM activity AS a INNER JOIN student AS s ON ((a.id+s.id)%3 = 0);
+
+SELECT COUNT(DISTINCT student_id) FROM activity_enrollment;
+SELECT * FROM activity_enrollment ORDER BY student_id;
+COMMIT;
