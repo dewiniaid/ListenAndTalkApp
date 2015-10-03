@@ -1,6 +1,5 @@
-﻿-- PostgreSQL-ish, but- this is easily changed.
--- Syntax not yet checked.
-
+﻿-- PostgreSQL-ish, but- 44this is easily changed.
+ROLLBACK; BEGIN; 
 DROP SCHEMA listenandtalk CASCADE;
 CREATE SCHEMA listenandtalk;
 GRANT ALL PRIVILEGES ON SCHEMA listenandtalk TO developer;
@@ -50,6 +49,17 @@ CREATE TABLE location (
 
 
 
+CREATE TABLE category (
+	-- Lookup table for types of activities
+	id SERIAL NOT NULL,
+	name TEXT NOT NULL,
+
+	PRIMARY KEY (id),
+	UNIQUE (name)
+);
+
+
+
 CREATE TABLE attendance_status (
 	-- Lookup table of attendance statuses (e.g. Present, Absent, Illness, Not Expected (as a drop-in feature)
 	-- May want some additional metadata to simplify any reporting.
@@ -68,6 +78,7 @@ CREATE TABLE activity (  -- Sometimes also called a "Roster"
 
 	staff_id INT NOT NULL,
 	location_id INT NOT NULL,
+	category_id INT NOT NULL,
 	
 	-- TODO: Track when this class is (so we know when the rostering information is useful)
 	start_date DATE NOT NULL, -- First possible date of this class
@@ -90,7 +101,8 @@ CREATE TABLE activity (  -- Sometimes also called a "Roster"
 
 	PRIMARY KEY(id),
 	FOREIGN KEY(staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-	FOREIGN KEY(location_id) REFERENCES location(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	FOREIGN KEY(location_id) REFERENCES location(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY(category_id) REFERENCES category(id) ON UPDATE CASCADE ON DELETE RESTRICT
 --	FOREIGN KEY(default_attendance_status_id) REFERENCES attendance_status(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
@@ -148,13 +160,15 @@ CREATE TABLE attendance ( -- aka "Checkin"
 	-- In the case of a), we probably want to still include this record on any reporting.
 	-- In the case of b), we probably don't want to include this record because we don't care if a student was going to be 
 	-- ... on vacation next week if they're no longer attending.
+	id INT NOT NULL,
 	student_id INT NOT NULL,
 	activity_id INT NOT NULL,
 	date DATE NOT NULL,
 	status_id INT NOT NULL,
 	comment TEXT NULL, -- Optional
 	date_entered TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	PRIMARY KEY(student_id, activity_id, date),
+	PRIMARY KEY(id),
+	-- PRIMARY KEY(student_id, activity_id, date),
 	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
