@@ -135,8 +135,23 @@ module.exports = function() {
 
     getAllActivityQuery : function(){
       return "SELECT * from "+ ACTIVITY_TABLE;
-    }
+    },
 
+    getAllStatusQuery : function(){
+      return "SELECT * from "+ ATTENDANCE_STATUS_TABLE;
+    },
+
+    getTeachersQuery : function(){
+      return "SELECT * from "+ TEACHER_TABLE;
+    },
+
+    getActivityByTeacherEmailQuery : function(email){
+      return {
+          text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
+          values: [email],
+          name: 'teacherEmail'
+      };
+    }
 
   };
 };
