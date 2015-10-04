@@ -220,6 +220,14 @@ module.exports = function() {
           values: [email],
           name: 'teacherEmail'
       };
+    },
+
+    getActivityByIdQuery : function(id){
+      return {
+          text: "SELECT * FROM " + ACTIVITY_TABLE + " WHERE id = $1",
+          values: [id],
+          name: 'activityId'
+      };
     }
 
   };

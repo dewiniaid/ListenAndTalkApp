@@ -88,6 +88,7 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
   $scope.finalCheckIn = function() {
 	mainFactory.checkIn($scope.filter.activityId, studentsToCheckIn, getToday(), function(result) {
 		console.log('checked in');
+		$window.location.reload();
 	})
   }
 });

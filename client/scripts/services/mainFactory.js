@@ -98,6 +98,7 @@ app.factory('mainFactory', function ($http, Restangular, $window){
     for (key in studentsToCheckIn) {
       students["data"].push({"STUDENT_ID": key, "STATUS_ID": studentsToCheckIn[key]["status"], "COMMENT": studentsToCheckIn[key]["comment"], "ACTIVITY_ID": activity_id, "DATE": date})
     }
+    console.log(students);
     Restangular.all('/api/v1/students/activity').post(students)
     .then(function(result){
       callback(result);

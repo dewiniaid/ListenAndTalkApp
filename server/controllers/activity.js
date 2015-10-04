@@ -7,6 +7,13 @@ module.exports = (function(){
         db.query(query, function(result){
           res.status(200).json(result);
         });
+      },
+
+      getActivityById : function(req, res){
+        var query = db.getActivityByIdQuery(id);
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
       }
     }
   })();
