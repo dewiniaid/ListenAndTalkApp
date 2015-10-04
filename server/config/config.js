@@ -8,6 +8,7 @@ module.exports = function(){
     schema : 'listenandtalk,public',
     username : 'backend',
     password : 'Fq7DzXcOhw1ccqrHCwSQ',
-    connection : "postgres://backend:Fq7DzXcOhw1ccqrHCwSQ@latpostgresql.chk1nvtjtlku.us-west-2.rds.amazonaws.com:5432/postgres"
+    connection : "postgres://backend:Fq7DzXcOhw1ccqrHCwSQ@latpostgresql.chk1nvtjtlku.us-west-2.rds.amazonaws.com:5432/postgres",
+    auth_key : 'B0ap21JvYBt506Hm6BuRMwL0suhGSVatesLy8AJM1Htpixir9-I-bO4EIoiaZkwy'
   };
 }();
