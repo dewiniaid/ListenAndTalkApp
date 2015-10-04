@@ -11,7 +11,7 @@ var jwtCheck = jwt({
 
 var server = express();
 server.use(express.static(path.join(__dirname, "./client")));
-
+server.use('/api/', jwtCheck);
 var bodyParser = require("body-parser");
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
