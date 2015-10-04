@@ -5,17 +5,18 @@ function ($scope, $http, auth, store, $location, mainFactory) {
     $scope.error = "";
     auth.signin({}, function (profile, token) {
       // Pass profile.email instead of "staff1@example.com" to make sure only staff can access
+      store.set('profile', profile);
+      store.set('token', token);
       mainFactory.getTeacherByEmail(profile.email, function(result){
       // mainFactory.getTeacherByEmail("staff1@example.com", function(result){
           // Staff not Found.
           if(!result[0]) {
             auth.signout();
-            $scope.error = "ID not found.";
+            store.remove('profile');
+            store.remove('token');
           }
           else {
             // Success callback
-            store.set('profile', profile);
-            store.set('token', token);
             $location.path('/');
           }
       });

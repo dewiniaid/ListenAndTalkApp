@@ -1,9 +1,9 @@
 var app = angular.module('app');
 
 app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
-  mainFactory.getAllStudents(function(result) {
-    $scope.students = result;
-  });
+  // mainFactory.getAllStudents(function(result) {
+  //   $scope.students = result;
+  // });
 
   mainFactory.getAllActivities(function(result) {
   	$scope.activities = result;
@@ -17,9 +17,12 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
   	date = new Date(filter["date"]).toISOString().slice(0,10);
   	mainFactory.searchByActivityAndDate(filter["activityId"], date, function(result) {
       $scope.students = result;
-      console.log(result);
+	  mainFactory.getActivityById(filter["activityId"], function(result) {
+	  	$scope.activityName = result[0]["name"]
+	  })
     });
   }
+
 
   $scope.addNewStudent = function() {
     mainFactory.addNewStudent($scope.newstudent, function(result) {
@@ -50,19 +53,26 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
 	} else {
 		studentsToCheckIn[studentID] = {"status": status};
 	}
-  var index = -1;
-  for (var i = 0; i < $scope.students.length; i++) {
-    if (studentID == $scope.students[i].student_id)
-      index = i;
+    var index = -1;
+    for (var i = 0; i < $scope.students.length; i++) {
+      if (studentID == $scope.students[i].student_id)
+        index = i;
+      }
+    $scope.students[index].status_id = status;
   }
-  $scope.students[index].status_id = status;
-    }
 
   $scope.addComment = function(comment, studentID) {
   	if (studentsToCheckIn[studentID]) {
 		studentsToCheckIn[studentID]["comment"] = comment;
 	} else {
 		studentsToCheckIn[studentID] = {"comment": comment};
+
+        var index = -1;
+        for (var i = 0; i < $scope.students.length; i++) {
+           if (studentID == $scope.students[i].student_id)
+              index = i;
+        }
+        studentsToCheckIn[studentID]["status"] = $scope.students[index].status_id;
 	}
   	console.log(studentsToCheckIn);
   }
@@ -86,8 +96,9 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
   }
 
   $scope.finalCheckIn = function() {
-	mainFactory.checkIn(1, studentsToCheckIn, getToday(), function(result) {
+	mainFactory.checkIn($scope.filter.activityId, studentsToCheckIn, getToday(), function(result) {
 		console.log('checked in');
+		$window.location.reload();
 	})
   }
 });
