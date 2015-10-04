@@ -7,15 +7,12 @@ app.controller('settingCtrl', function($scope, mainFactory, store, $window, $sta
 	});
 
 
-//	var studentsToCheckIn = {};
-//	$scope.checkin = function(status, studentID) {
-//		// studentsToCheckIn.push({"status": status, "studentID": studentID})
-//		studentsToCheckIn[studentID] = status;
-//		console.log(studentsToCheckIn);
-//		if (Object.keys(studentsToCheckIn).length == $scope.students.length) {
-//			mainFactory.checkIn(function() {
-//				console.log('test');
-//			})
-//		};
+	
+//	var teacherDeactivateList = {};
+//	$scope.deactivate = function(status, teacherID);
+//	teacherDeactivateList.push(status, teacherID);
+//	console.log(teacherDeactivateList);
+//	
 //	}
+
 });
