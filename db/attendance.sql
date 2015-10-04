@@ -24,6 +24,7 @@ FROM
 WHERE
 	'2015-10-01' BETWEEN activity.start_date AND activity.end_date
 	AND '2015-10-01' BETWEEN ae.start_date AND COALESCE(ae.end_date, 'infinity')
+	AND activity.id=1
 )
 UNION DISTINCT
 (
@@ -42,7 +43,11 @@ FROM
 	INNER JOIN activity ON activity.id=a.activity_id
 WHERE
 	a.date='2015-10-01'
+	AND activity.id=1
 )
 
 ) AS t
-ORDER BY t.name_first, t.name_last
+ORDER BY t.name_first,t.name_last;
+
+
+SELECT * FROM attendance_status;
