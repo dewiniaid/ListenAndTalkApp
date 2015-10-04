@@ -1,6 +1,6 @@
 var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
-
+var activity = require("../controllers/activity.js");
 module.exports = function(app) {
 
   // ===================
@@ -35,10 +35,18 @@ module.exports = function(app) {
 
   //Bulk upload of the attendance.....
   //ID call3
-  //[{attendance_id:NULL, STUDENT_ID:, STATUS:, COMMENT:, ACTIVITY_ID:}]
+  //[{STUDENT_ID:, STATUS_ID:, COMMENT:, ACTIVITY_ID:, DATE:}]
+
   app.post('/api/v1/students/activity', function(req, res){
-    students.getAllStudentsByActivityAndDate(req, res);
+    students.postStudentAttendance(req, res);
   });
+
+  // ===================
+  // Activity API
+  // ===================
+  app.get('/api/v1/activity', function(req, res){
+    activity.getAllActivity(req, res)
+  })
 
   // ===================
   // Teacher API
@@ -48,12 +56,6 @@ module.exports = function(app) {
   });
   app.get('/api/v1/teachers/:id', function(req, res){
     teachers.getTeacherById(req, res);
-  });
-  app.put('/api/v1/teachers/:id', function(req, res){
-    teachers.updateTeacherInfo(req, res);
-  });
-  app.post('/api/v1/teachers', function(req, res){
-    teachers.addNewTeacher(req, res);
   });
 
 };

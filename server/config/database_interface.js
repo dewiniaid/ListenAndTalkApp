@@ -113,6 +113,16 @@ module.exports = function() {
             };
     },
 
+
+    postStudentAttendance : function(activityId, studentId, date, statusId, comment){
+      //TODO THIS QUERY
+      return {
+          text: "INSERT INTO attendance_upsert (activity_id, student_id, date, status_id, comment, date_entered) VALUES ($1, $2, $3, $4, $5, 'now')",
+          values: [activityId, studentId, date, statusId, comment],
+          name: 'Posting student attendance'
+      };
+    },
+
     addNewStudentQuery : function(firstName, lastName){
       //TODO THIS QUERY
       return {
@@ -120,6 +130,10 @@ module.exports = function() {
           values: [firstName, lastName],
           name: 'adding new student by name'
       };
+    },
+
+    getAllActivityQuery : function(){
+      return "SELECT * from "+ ACTIVITY_TABLE;
     }
 
 
