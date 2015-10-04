@@ -1,4 +1,3 @@
-var test = require("../controllers/cTest.js");
 var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
 
@@ -43,5 +42,5 @@ module.exports = function(app) {
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
   });
-  
+
 };
