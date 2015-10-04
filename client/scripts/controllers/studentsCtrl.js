@@ -6,5 +6,14 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
     $scope.students = result;
   });
 
-
+  mainFactory.getAllActivities(function(result) {
+  	$scope.activities = result;
+  });
+  
+  $scope.checkin = function(status) {
+	console.log(status);
+	mainFactory.checkIn(function() {
+		console.log('test');
+	})
+  }
 });

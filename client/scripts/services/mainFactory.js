@@ -18,6 +18,17 @@ app.factory('mainFactory', function ($http, Restangular, $window){
       });
   };
 
+  factory.getAllActivities = function(callback) {
+    Restangular.all('api/v1/activities').getList()
+      .then(function(result){
+        callback(result);
+      });
+  };
+
+  factory.checkIn = function(callback) {
+    callback();
+  }
+
 
   return factory;
 });

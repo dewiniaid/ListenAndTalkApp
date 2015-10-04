@@ -82,6 +82,10 @@ module.exports = function() {
           values: [firstName, lastName],
           name: 'adding new student by name'
       };
+    },
+
+    getAllActivitiesQuery : function() {
+      return "SELECT * FROM activity";
     }
 
 

@@ -1,5 +1,6 @@
 var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
+var activities = require("../controllers/activities.js");
 
 module.exports = function(app) {
 
@@ -43,4 +44,10 @@ module.exports = function(app) {
     teachers.addNewTeacher(req, res);
   });
 
+  // ===================
+  // Activity API
+  // ===================
+  app.get('/api/v1/activities', function(req, res){
+    activities.getAllActivities(req, res);
+  });
 };
