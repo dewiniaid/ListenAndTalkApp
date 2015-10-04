@@ -10,6 +10,10 @@ app.config(function($stateProvider, $urlRouterProvider){
   .state('about', {
     url: '/about',
     templateUrl: 'partials/about.html'
+  })
+  .state('viewHistory',{
+    url: '/viewHistory',
+    templateUrl: 'partials/viewHistory.html'
   });
 
   $urlRouterProvider.otherwise('/');
