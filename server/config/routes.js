@@ -16,6 +16,7 @@ module.exports = function(app) {
   //This will return all the students for a particular activity id for a given date
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
+    console.log('test');
     students.getAllStudentsByActivityAndDate(req, res);
   });
 
