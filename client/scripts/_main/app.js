@@ -59,6 +59,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     url: '/markAttendance',
     views: {
       "nav_top": {
+        controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
@@ -71,6 +72,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     url: '/viewAttendance',
     views: {
       "nav_top": {
+          controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
@@ -83,6 +85,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     url: '/settings',
     views: {
       "nav_top": {
+        controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
