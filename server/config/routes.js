@@ -1,12 +1,8 @@
 var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
-<<<<<<< HEAD
 var activity = require("../controllers/activity.js");
 var status = require("../controllers/status.js");
-=======
-var activities = require("../controllers/activities.js");
 
->>>>>>> a4e6dffee0bbf04410edc25eefd869433c7b3e2b
 module.exports = function(app) {
 
   // ===================
@@ -76,22 +72,11 @@ module.exports = function(app) {
   });
   app.get('/api/v1/teachers/:id', function(req, res){
     teachers.getTeacherById(req, res);
-<<<<<<< HEAD
-=======
   });
-
   app.put('/api/v1/teachers/:id', function(req, res){
     teachers.updateTeacherInfo(req, res);
   });
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
->>>>>>> a4e6dffee0bbf04410edc25eefd869433c7b3e2b
-  });
-
-  // ===================
-  // Activity API
-  // ===================
-  app.get('/api/v1/activities', function(req, res){
-    activities.getAllActivities(req, res);
   });
 }

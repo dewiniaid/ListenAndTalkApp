@@ -116,7 +116,6 @@ module.exports = function() {
 
 
     postStudentAttendance : function(activityId, studentId, date, statusId, comment){
-      //TODO THIS QUERY
       return {
           text: "INSERT INTO attendance_upsert (activity_id, student_id, date, status_id, comment, date_entered) VALUES ($1, $2, $3, $4, $5, 'now')",
           values: [activityId, studentId, date, statusId, comment],
@@ -125,7 +124,6 @@ module.exports = function() {
     },
 
     addNewStudentQuery : function(firstName, lastName){
-      //TODO THIS QUERY
       return {
           text: "",
           values: [firstName, lastName],
@@ -135,7 +133,6 @@ module.exports = function() {
 
     getAllActivitiesQuery : function() {
       return "SELECT * from "+ ACTIVITY_TABLE;
-<<<<<<< HEAD
     },
 
     getAllStatusQuery : function(){
@@ -145,12 +142,7 @@ module.exports = function() {
     getTeachersQuery : function(){
       return "SELECT * from "+ TEACHER_TABLE;
     },
-=======
-    }
-    // getAllActivityQuery : function(){
-    //   return "SELECT * from "+ ACTIVITY_TABLE;
-    // }
->>>>>>> a4e6dffee0bbf04410edc25eefd869433c7b3e2b
+
 
     getActivityByTeacherEmailQuery : function(email){
       return {
