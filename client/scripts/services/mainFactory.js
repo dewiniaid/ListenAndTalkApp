@@ -25,6 +25,14 @@ app.factory('mainFactory', function ($http, Restangular, $window){
       });
   };
 
+  // Teacher
+  factory.getTeacherByEmail = function(email, callback) {
+    Restangular.all('api/v1/teachers/' + email).getList()
+      .then(function(result){
+        callback(result);
+      });
+  };
+
   factory.checkIn = function(callback) {
     callback();
   }

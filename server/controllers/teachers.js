@@ -9,13 +9,13 @@ module.exports = (function(){
           res.status(200).json(result);
         });
       },
-      getTeacherById : function(req, res){
-        var staffId = req.params.id;
-        var query = db.getTeacherByIdQuery(staffId);
-        db.query(query, function(result){
-          res.status(200).json(result);
-        });
-      },
+      // getTeacherById : function(req, res){
+      //   var staffId = req.params.id;
+      //   var query = db.getTeacherByIdQuery(staffId);
+      //   db.query(query, function(result){
+      //     res.status(200).json(result);
+      //   });
+      // },
       getTeacherInfo : function(req, res){
         var query = db.getAllTeachersQuery();
         db.query(query, function(result){
