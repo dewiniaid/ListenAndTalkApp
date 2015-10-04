@@ -32,6 +32,13 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   };
+    
+  factory.getActivityByTeacherEmail = function(email, callback) {
+    Restangular.all('api/v1/teachers/' + email + '/activity').getList()
+      .then(function(result){
+        callback(result);
+      });
+  };  
 
 
   factory.searchByActivityAndDate = function(activityId, date, callback) {
@@ -41,6 +48,14 @@ app.factory('mainFactory', function ($http, Restangular, $window){
       });
   }
 
+  //Include date
+  factory.searchHistoryByStudentAndDate = function(studentId, date, callback) {
+    Restangular.all('/api/v1/students/'+ studentId +'/activities').getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
+  
 
   factory.checkIn = function(activity_id, studentsToCheckIn, date, callback) {
     var students = {"data": []};

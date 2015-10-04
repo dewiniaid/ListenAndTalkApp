@@ -21,6 +21,14 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
     });
   }
 
+  $scope.searchHistoryByStudentAndDate = function(filter) {
+  	date = new Date(filter["date"]).toISOString().slice(0,10);
+  	mainFactory.searchHistoryByStudentAndDate(filter["studentId"], date, function(result) {
+      $scope.activities = result;
+      console.log(result);
+    });
+  }
+  
   var studentsToCheckIn = {};
   $scope.checkin = function(status, studentID) {
 	if (studentsToCheckIn[studentID]) {

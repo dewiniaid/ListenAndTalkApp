@@ -4,7 +4,6 @@ app.controller('navCtrl', function($scope, $location){
     $scope.init = function(){
       $scope.navList = [
         {name: "Test", href: "#/test"},
-        {name: "About", href: "#/about"},
         {name: "Mark Attendance", href: "#/markAttendance"},
         {name: "View Attendance", href: "#/viewAttendance"},
         {name: "Settings", href: "#/settings"}
