@@ -14,9 +14,11 @@ module.exports = function(app) {
 
 
   //Deactivate students
+  /*
   app.put('/api/v1/students/:id', function(req, res){
     students.putStudentById(req, res);
   })
+  */
   //This will return the roster of students for a given avtivity
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
@@ -38,8 +40,11 @@ module.exports = function(app) {
   app.post('/api/v1/students', function(req, res){
     students.addNewStudent(req, res);
   });
+  
+  //Update existing student
+  app.post('/api/v1/students/:id', students.updateStudent);  
 
-  //Get all the activities for a partictular studentId.
+  //Get all the activities for a particular studentId.
   //Send you a history for the students.
   app.get('/api/v1/students/:id/activities', function(req, res){
     students.getStudentHistory(req, res);
@@ -82,12 +87,18 @@ module.exports = function(app) {
   app.get('/api/v1/teachers/:email/activity', function(req, res){
     teachers.getActivityByTeacherEmail(req, res);
   });
+  /*
   app.put('/api/v1/teachers/:id', function(req, res){
     teachers.updateTeacherInfo(req, res);
   });
+  */
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
   });
+  
+  //Update existing staff
+  app.put('/api/v1/teachers/:id', teachers.updateTeacher);  
+  
   app.delete('/api/v1/teachers/:id', function(req, res){
     teachers.removeTeacher(req, res);
   });
