@@ -11,6 +11,80 @@ var pg = require('pg');
   var ACTIVITY_ENROLLMENT_TABLE = "activity_enrollment";
   var ATTENDANCE_TABLE = "attendance";
 
+
+var AddUpdateGenerator = function(table, keyfields, valuefields) {
+    /* Creates queries and API wrappers for add/update functionality for objects that are edited/updated
+     * table: Table to work with..
+     * keyfields: List of fields that identify primary key components.  Ignored on insertions, used for WHERE on updates.
+     * valuefields: List of fields that identify values that are inserted/updated.
+     */
+
+    this.keyfields = keyfields;
+    this.valuefields = valuefields;
+    this.table = table;
+
+    function generateParams(ct) {
+        var ret = '';
+        for (var i = 1; i <= ct; ++i) {
+            if (i != 1) ret += ', ';  // Add comma first if this isn't the first param
+            ret += '$' + i;
+        }
+        return ret;
+    }
+
+    var paramNum = 1; // Dynamic query parameter generation
+
+    var updateSql = "UPDATE " + this.table + " SET ";
+    for (var idx = 0; idx < this.valuefields.length; ++idx) {
+        if (idx) updateSql += ", ";
+        updateSql += this.valuefields[idx] + "=$" + (paramNum++);
+    }
+    updateSql += " WHERE ";
+    for (var idx = 0; idx < this.keyfields.length; ++idx) {
+        updateSql += this.keyfields[idx] += "=$" + (paramNum++);
+    }
+	updateSql += " RETURNING *";
+    this.updateSql = updateSql;
+
+    paramNum = 1; // reset count for new query
+    var insertSql = "INSERT INTO " + table + "(" + this.valuefields.join(", ") + ") VALUES (";
+    for (var idx = 0; idx < this.valuefields.length; ++idx) {
+        if (idx) insertSql += ", ";
+        insertSql += "$" + (paramNum++);
+    }
+    insertSql += ") RETURNING *";
+    this.insertSql = insertSql;
+
+    return this;
+}
+
+AddUpdateGenerator.prototype.generateInsertQuery = function () {
+    var _t = this;
+    return function() {
+        return {
+            text: _t.insertSql,
+            values: arguments,
+            name: _t.table + "_autogen_insert_query"
+        }
+    };
+};
+
+AddUpdateGenerator.prototype.generateUpdateQuery = function () {
+    var _t = this;
+    return function() {
+        return {
+            text: _t.updateSql,
+            values: arguments,
+            name: _t.table + "_autogen_update_query"
+        }
+    };
+};
+
+
+var StudentUpdater = new AddUpdateGenerator('student', ['id'], ['name_first', 'name_last']);
+var StaffUpdater = new AddUpdateGenerator('staff', ['id'], ['name_first', 'name_last', 'email']);
+
+
 module.exports = function() {
   return {
     query : function(inputQuery, callback){
@@ -124,13 +198,8 @@ module.exports = function() {
       };
     },
 
-    addNewStudentQuery : function(firstName, lastName){
-      return {
-          text: "INSERT INTO "+ STUDENT_TABLE +"(name_first, name_last) VALUES ($1, $2)",
-          values: [firstName, lastName],
-          name: 'adding new student by name'
-      };
-    },
+	addNewStudentQuery : StudentUpdater.generateInsertQuery(),
+	updateStudentQuery : StudentUpdater.generateUpdateQuery(),
 
     removeStudentQuery : function(id) {
       return {
@@ -139,14 +208,8 @@ module.exports = function() {
           name: 'remove student by id'
       };
     },
-
-    addNewTeacherQuery : function(firstName, lastName, email){
-      return {
-          text: "INSERT INTO "+ TEACHER_TABLE +"(name_first, name_last, email) VALUES ($1, $2, $3)",
-          values: [firstName, lastName, email],
-          name: 'adding new student by name'
-      };
-    },
+	addNewTeacherQuery : StaffUpdater.generateInsertQuery(),
+	updateTeacherQuery : StaffUpdater.generateUpdateQuery(),
 
     removeTeacherQuery : function(id){
       return {
@@ -216,7 +279,6 @@ module.exports = function() {
 
     getActivityByTeacherEmailQuery : function(email){
       return {
-          // text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
           text: "SELECT * FROM " + ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
           values: [email],
           name: 'teacherEmail'

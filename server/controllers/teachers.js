@@ -47,6 +47,15 @@ module.exports = (function(){
           res.status(200).json(result);
         });
       },
+      updateTeacher : function(req, res){
+        // var firstName = req.query.firstName;
+        // var lastName = req.query.lastName;
+        // var email = req.query.email
+        var query = db.updateTeacherQuery(req.body.firstName, req.body.lastName, req.body.email, req.params.id);
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
 
       removeTeacher : function(req, res){
         var query = db.removeTeacherQuery(req.params.id);

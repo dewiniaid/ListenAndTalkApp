@@ -1,6 +1,6 @@
 module.exports = function(){
   return {
-    server_port : 4000,
+    server_port : 8081,
     models_path :  __dirname + "/../server/models",
     hostname : 'latpostgresql.chk1nvtjtlku.us-west-2.rds.amazonaws.com',
     port : 5432,
