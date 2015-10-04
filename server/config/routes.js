@@ -1,6 +1,6 @@
-var test = require("../server/controllers/cTest.js");
-var students = require("../server/controllers/students.js");
-var teachers = require("../server/controllers/teachers.js");
+var test = require("../controllers/cTest.js");
+var students = require("../controllers/students.js");
+var teachers = require("../controllers/teachers.js");
 
 module.exports = function(app) {
   // GET /api/test

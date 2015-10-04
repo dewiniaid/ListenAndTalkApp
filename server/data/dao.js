@@ -27,7 +27,7 @@ module.exports = (function(){
 	var ATTENDANCE_STATUS_TABLE = "attendance_status";
 	var ACTIVITY_TABLE = "activity";
 	var ACTIVITY_ENROLLMENT_TABLE = "activity_enrollment";
-	var ATTENDANCE_TABLE = "attendance"; 
+	var ATTENDANCE_TABLE = "attendance";
 
 
 	function doQuery(inputQuery){

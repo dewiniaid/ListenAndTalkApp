@@ -1,9 +1,10 @@
 var app = angular.module('app');
 
-app.controller('homeCtrl', function ($scope, mainFactory, auth, store, $window) {
+app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $state) {
+  console.log('test');
   $scope.auth = auth;
 	console.log(auth);
-  
+
   mainFactory.test(function(result) {
     $scope.test = result;
   });
@@ -12,6 +13,7 @@ app.controller('homeCtrl', function ($scope, mainFactory, auth, store, $window) 
     auth.signout();
     store.remove('profile');
     store.remove('token');
+    $window.location.reload();
   }
 
   $scope.post = function() {
