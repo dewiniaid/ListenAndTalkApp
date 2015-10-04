@@ -135,11 +135,30 @@ module.exports = function() {
 
     getAllActivitiesQuery : function() {
       return "SELECT * from "+ ACTIVITY_TABLE;
+<<<<<<< HEAD
+    },
+
+    getAllStatusQuery : function(){
+      return "SELECT * from "+ ATTENDANCE_STATUS_TABLE;
+    },
+
+    getTeachersQuery : function(){
+      return "SELECT * from "+ TEACHER_TABLE;
+    },
+=======
     }
     // getAllActivityQuery : function(){
     //   return "SELECT * from "+ ACTIVITY_TABLE;
     // }
+>>>>>>> a4e6dffee0bbf04410edc25eefd869433c7b3e2b
 
+    getActivityByTeacherEmailQuery : function(email){
+      return {
+          text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
+          values: [email],
+          name: 'teacherEmail'
+      };
+    }
 
   };
 };
