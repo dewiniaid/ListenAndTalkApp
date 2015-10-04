@@ -42,7 +42,7 @@ module.exports = function(app) {
   });
   
   //Update existing student
-  app.post('/api/v1/students/:id', students.updateStudent);  
+  app.put('/api/v1/students/:id', students.updateStudent);  
 
   //Get all the activities for a particular studentId.
   //Send you a history for the students.

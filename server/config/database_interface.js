@@ -58,7 +58,7 @@ var AddUpdateGenerator = function(table, keyfields, valuefields) {
 }
 
 AddUpdateGenerator.prototype.generateInsertQuery = function () {
-        var _t = this;
+    var _t = this;
     return function() {
         return {
             text: _t.insertSql,
@@ -195,7 +195,7 @@ module.exports = function() {
           values: [activityId, studentId, date, statusId, comment],
           name: 'Posting student attendance'
       };
-    }
+    },
 
 /*
     addNewStudentQuery : function(firstName, lastName){
@@ -206,8 +206,8 @@ module.exports = function() {
       };
     },
 */	
-	addNewStudentQuery : StudentUpdater.generateInsertQuery,
-	updateStudentQuery : StudentUpdater.generateUpdateQuery,
+	addNewStudentQuery : StudentUpdater.generateInsertQuery(),
+	updateStudentQuery : StudentUpdater.generateUpdateQuery(),
 
     removeStudentQuery : function(id) {
       return {
@@ -225,8 +225,8 @@ module.exports = function() {
       };
     },
 */
-	addNewTeacherQuery : TeacherUpdater.generateInsertQuery,
-	updateTeacherQuery : TeacherUpdater.generateUpdateQuery,
+	addNewTeacherQuery : StaffUpdater.generateInsertQuery(),
+	updateTeacherQuery : StaffUpdater.generateUpdateQuery(),
 
     removeTeacherQuery : function(id){
       return {
