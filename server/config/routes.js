@@ -12,6 +12,11 @@ module.exports = function(app) {
     students.getAllStudents(req, res);
   });
 
+
+  //Deactivate students
+  app.put('/api/v1/students/:id', function(req, res){
+    students.putStudentById(req, res);
+  })
   //This will return the roster of students for a given avtivity
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
@@ -49,6 +54,8 @@ module.exports = function(app) {
   app.get('/api/v1/activity', function(req, res){
     activity.getAllActivity(req, res)
   })
+
+
 
 
   // ===================

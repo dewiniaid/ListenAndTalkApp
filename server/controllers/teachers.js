@@ -22,6 +22,15 @@ module.exports = (function(){
           res.status(200).json(result);
         });
       },
+
+      updateTeacherInfo : function(req, res){
+        var id = req.params.id;
+        var deactivate = req.query.deactivate;
+        var query = db.dectivateTeacherQuery(id, deactivate.toLowerCase() === 'true');
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
       getActivityByTeacherEmail : function(req, res){
         var email = req.params.email;
         var query = db.getActivityByTeacherEmailQuery(email);

@@ -143,6 +143,39 @@ module.exports = function() {
       return "SELECT * from "+ TEACHER_TABLE;
     },
 
+    dectivateStudentQuery : function(id, deactivate){
+      if(deactivate){
+        console.log(deactivate);
+        return {
+            text: "UPDATE "+ STUDENT_TABLE + " SET date_inactive = now() WHERE id = $1",
+            values: [id],
+            name: 'id'
+        };
+      }else{
+        return {
+            text: "UPDATE "+ STUDENT_TABLE + " SET date_inactive = null WHERE id = $1",
+            values: [id],
+            name: 'id'
+        };
+      }
+    },
+
+    dectivateTeacherQuery : function(id, deactivate){
+      if(deactivate){
+        console.log(deactivate);
+        return {
+            text: "UPDATE "+ TEACHER_TABLE + " SET date_inactive = now() WHERE id = $1",
+            values: [id],
+            name: 'id'
+        };
+      }else{
+        return {
+            text: "UPDATE "+ TEACHER_TABLE + " SET date_inactive = null WHERE id = $1",
+            values: [id],
+            name: 'id'
+        };
+      }
+    },
     getActivityByTeacherEmailQuery : function(email){
       return {
           text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",

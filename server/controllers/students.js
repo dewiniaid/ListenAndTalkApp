@@ -18,7 +18,9 @@ module.exports = (function(){
 
       putStudentById : function(req, res){
         var id = req.params.id;
-        var query = db.putStudentByIdQuery(id);
+        var deactivate = req.query.deactivate;
+        var query = db.dectivateStudentQuery(id, deactivate.toLowerCase() === 'true');
+        console.log(query);
         db.query(query, function(result){
           res.status(200).json(result);
         });
