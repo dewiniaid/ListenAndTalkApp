@@ -9,6 +9,10 @@
           <a href="{{nav.href}}" ng-click="select(nav)" ng-bind="nav.name"></a>
         </li>
       </ul>
+      <ul class="nav navbar-nav pull-right">
+        <li><a href="#/user"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+        <li><a ng-click="logout()"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
+      </ul>
     </div>
   </div>
 </nav>

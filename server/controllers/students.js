@@ -1,16 +1,16 @@
-var postgres = require('../config/postgres.js')();
+var db = require('../config/database_interface.js')();
 
 module.exports = (function(){
     return {
       getAllStudents : function(req, res){
         var query = "SELECT * FROM student ORDER BY id ASC";
-        postgres.query(query, function(result){
+        db.query(query, function(result){
           res.status(200).json(result);
         });
       },
       getStudentById : function(req, res){
         var query = "SELECT * FROM student WHERE id = " + req.params.id;
-        postgres.query(query, function(result){
+        db.query(query, function(result){
           res.status(200).json(result);
         });
       },
