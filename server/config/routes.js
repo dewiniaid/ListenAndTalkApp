@@ -11,24 +11,34 @@ module.exports = function(app) {
     students.getAllStudents(req, res);
   });
 
+  //This will return all the students for a particular activity id for a given date
+  //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
     students.getAllStudentsByActivityAndDate(req, res);
   });
 
+  //Student info for a particular studentID
   app.get('/api/v1/students/:id', function(req, res){
     students.getStudentById(req, res);
   });
-  app.put('/api/v1/students/:id', function(req, res){
-    students.putStudentById(req, res);
-  });
-  app.put('/api/v1/students/:id', function(req, res){
-    students.putStudentById(req, res);
-  });
+
+  //Add new student
   app.post('/api/v1/students', function(req, res){
     students.addNewStudent(req, res);
   });
+
+  //Get all the activities for a partictular studentId.
+  //Send you a history for the students.
+  //ID call1
   app.get('/api/v1/students/:id/activities', function(req, res){
     students.getStudentsActivities(req, res);
+  });
+
+  //Bulk upload of the attendance.....
+  //ID call3
+  //[{attendance_id:NULL, STUDENT_ID:, STATUS:, COMMENT:, ACTIVITY_ID:}]
+  app.post('/api/v1/students/activity', function(req, res){
+    students.getAllStudentsByActivityAndDate(req, res);
   });
 
   // ===================
