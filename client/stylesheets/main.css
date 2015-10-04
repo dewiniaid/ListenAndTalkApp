@@ -4,6 +4,11 @@
     width: 100%;
 }
 
+.setting-table {
+	width: 48%;
+	display: inline-block;
+}
+
 fieldset {
     display: block;
     -webkit-margin-start: 2px;

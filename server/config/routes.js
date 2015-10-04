@@ -36,10 +36,8 @@ module.exports = function(app) {
 
   //Get all the activities for a partictular studentId.
   //Send you a history for the students.
-  //ID call1
   app.get('/api/v1/students/:id/activities', function(req, res){
-    //NOT IMPLEMENTED LOL
-    students.getStudentsActivities(req, res);
+    students.getStudentHistory(req, res);
   });
 
   //Bulk upload of the attendance.....
