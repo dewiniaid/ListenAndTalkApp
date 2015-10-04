@@ -2,7 +2,6 @@ var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
 var activity = require("../controllers/activity.js");
 var status = require("../controllers/status.js");
-var activities = require("../controllers/activities.js");
 
 module.exports = function(app) {
 
@@ -13,7 +12,12 @@ module.exports = function(app) {
     students.getAllStudents(req, res);
   });
 
-  //This will return all the students for a particular activity id for a given date
+
+  //Deactivate students
+  app.put('/api/v1/students/:id', function(req, res){
+    students.putStudentById(req, res);
+  })
+  //This will return the roster of students for a given avtivity
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
     console.log('test');
@@ -34,6 +38,7 @@ module.exports = function(app) {
   //Send you a history for the students.
   //ID call1
   app.get('/api/v1/students/:id/activities', function(req, res){
+    //NOT IMPLEMENTED LOL
     students.getStudentsActivities(req, res);
   });
 
@@ -51,6 +56,8 @@ module.exports = function(app) {
   app.get('/api/v1/activity', function(req, res){
     activity.getAllActivity(req, res)
   })
+
+
 
 
   // ===================
@@ -72,10 +79,6 @@ module.exports = function(app) {
   app.get('/api/v1/teachers/:email/activity', function(req, res){
     teachers.getActivityByTeacherEmail(req, res);
   });
-  app.get('/api/v1/teachers/:id', function(req, res){
-    teachers.getTeacherById(req, res);
-  });
-
   app.put('/api/v1/teachers/:id', function(req, res){
     teachers.updateTeacherInfo(req, res);
   });
@@ -83,10 +86,4 @@ module.exports = function(app) {
     teachers.addNewTeacher(req, res);
   });
 
-  // ===================
-  // Activity API
-  // ===================
-  app.get('/api/v1/activities', function(req, res){
-    activities.getAllActivities(req, res);
-  });
 }
