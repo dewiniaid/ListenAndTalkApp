@@ -37,6 +37,7 @@ module.exports = function(app) {
   //Send you a history for the students.
   //ID call1
   app.get('/api/v1/students/:id/activities', function(req, res){
+    //NOT IMPLEMENTED LOL
     students.getStudentsActivities(req, res);
   });
 
@@ -76,9 +77,6 @@ module.exports = function(app) {
   });
   app.get('/api/v1/teachers/:email/activity', function(req, res){
     teachers.getActivityByTeacherEmail(req, res);
-  });
-  app.get('/api/v1/teachers/:id', function(req, res){
-    teachers.getTeacherById(req, res);
   });
   app.put('/api/v1/teachers/:id', function(req, res){
     teachers.updateTeacherInfo(req, res);

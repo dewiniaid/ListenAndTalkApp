@@ -22,7 +22,7 @@ module.exports = (function(){
         var query = db.dectivateStudentQuery(id, deactivate.toLowerCase() === 'true');
         console.log(query);
         db.query(query, function(result){
-          res.status(200).json(result);
+          res.status(200).json("Successful decativation");
         });
       },
 
@@ -31,7 +31,7 @@ module.exports = (function(){
         var date = req.query.date;
         var query = db.getAllStudentsByActivityAndDateQuery(activityId, date);
         db.query(query, function(result){
-          res.status(200).json(result);
+          res.status(200).send(result);
         });
       },
 
@@ -56,8 +56,8 @@ module.exports = (function(){
       },
 
       addNewStudent : function(req, res){
-        var firstName = res.params.firstName;
-        var lastName = res.params.lastName;
+        var firstName = req.query.firstName;
+        var lastName = req.query.lastName;
         var query = db.addNewStudentQuery(firstName, lastName);
         db.query(query, function(result){
           res.status(200).json(result);

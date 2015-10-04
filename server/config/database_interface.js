@@ -125,8 +125,16 @@ module.exports = function() {
 
     addNewStudentQuery : function(firstName, lastName){
       return {
-          text: "",
+          text: "INSERT INTO "+ STUDENT_TABLE +"(name_first, name_last) VALUES ($1, $2)",
           values: [firstName, lastName],
+          name: 'adding new student by name'
+      };
+    },
+
+    addNewTeacherQuery : function(firstName, lastName, email){
+      return {
+          text: "INSERT INTO "+ TEACHER_TABLE +"(name_first, name_last, email) VALUES ($1, $2, $3)",
+          values: [firstName, lastName, email],
           name: 'adding new student by name'
       };
     },
