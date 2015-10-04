@@ -25,8 +25,7 @@
             <th>ID</th>
             <th>First Name</th>
             <th>Last Name</th>
-            <th>Status</th>
-            <th>Comments</th>
+            <th>Status & Comments</th>
           </tr>
           <tr ng-repeat="student in students">
             <td>{{student.id}}</td>
@@ -49,10 +48,6 @@
                     <textarea ng-model="comment" ng-change="addComment(comment, student.id)"></textarea>
                 </form>
             </td>
-            <td>
-                <form>
-                </form>
-            </td>
           </tr>
           <tr>
             <td></td>
@@ -63,7 +58,6 @@
                     <input type="submit" value="Check in" ng-click="finalCheckIn()">
                 </form>
             </td>
-            <td></td>
           </tr>
         </table>
       </div>
