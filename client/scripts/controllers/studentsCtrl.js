@@ -45,14 +45,18 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
 
   var studentsToCheckIn = {};
   $scope.checkin = function(status, studentID) {
-  	console.log(studentID);
 	if (studentsToCheckIn[studentID]) {
 		studentsToCheckIn[studentID]["status"] = status;
 	} else {
 		studentsToCheckIn[studentID] = {"status": status};
 	}
-	console.log(studentsToCheckIn);
+  var index = -1;
+  for (var i = 0; i < $scope.students.length; i++) {
+    if (studentID == $scope.students[i].student_id)
+      index = i;
   }
+  $scope.students[index].status_id = status;
+    }
 
   $scope.addComment = function(comment, studentID) {
   	if (studentsToCheckIn[studentID]) {
