@@ -42,6 +42,19 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
       }
     }
   })
+  .state('newstaff', {
+    url: '/newstaff',
+    views: {
+      "nav_top": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'staffCtrl',
+        templateUrl: "partials/newstaff.html"
+      }
+    }
+  })
   .state('markAttendance', {
     url: '/markAttendance',
     views: {

@@ -147,6 +147,14 @@ module.exports = function() {
       };
     },
 
+    removeTeacherQuery : function(id){
+      return {
+          text: "DELETE FROM "+ TEACHER_TABLE +" WHERE id = $1",
+          values: [id],
+          name: 'remove staff by id'
+      };
+    },
+
     getAllActivitiesQuery : function() {
       return "SELECT * from "+ ACTIVITY_TABLE;
     },

@@ -88,5 +88,8 @@ module.exports = function(app) {
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
   });
+  app.delete('/api/v1/teachers/:id', function(req, res){
+    teachers.removeTeacher(req, res);
+  });
 
 }

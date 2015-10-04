@@ -39,10 +39,17 @@ module.exports = (function(){
         });
       },
       addNewTeacher : function(req, res){
-        var firstName = req.query.firstName;
-        var lastName = req.query.lastName;
-        var email = req.query.email
-        var query = db.addNewTeacherQuery(firstName, lastName, email);
+        // var firstName = req.query.firstName;
+        // var lastName = req.query.lastName;
+        // var email = req.query.email
+        var query = db.addNewTeacherQuery(req.body.firstName, req.body.lastName, req.body.email);
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
+
+      removeTeacher : function(req, res){
+        var query = db.removeTeacherQuery(req.params.id);
         db.query(query, function(result){
           res.status(200).json(result);
         });
