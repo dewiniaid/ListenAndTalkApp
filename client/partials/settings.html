@@ -19,7 +19,7 @@
 						<td>
 							<form>
 								<label class="radio-inline">
-									<input type="radio" ng-model="status" value="deactivate" ng-change="deactivate(status, teachers.id)"> deactivate
+									<input type="radio" ng-model="status" value="deactivate" ng-click="deactivate(status, student.id)"> deactivate
 								</label>
 							</form>
 						</td>
@@ -39,13 +39,12 @@
 						<td>
 							<form>
 								<label class="radio-inline">
-									<input type="radio" ng-model="status" value="deactivate" ng-change="deactivate(status, student.id)"> deactivate
+									<input type="radio" ng-model="status" value="deactivate" ng-click="deactivate(status, student.id)"> deactivate
 								</label>
 							</form>
 						</td>
 					</tr>
 				</table>
-				<button>Submit</button>
 			</div>
 	</div>
 

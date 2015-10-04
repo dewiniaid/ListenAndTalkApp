@@ -9,9 +9,10 @@ app.controller('settingCtrl', function($scope, mainFactory, store, $window, $sta
 	mainFactory.getAllStudents(function(result) {
 		$scope.students = result;
 	});
-
 	
-//	var teacherDeactivateList = {};
+	
+
+
 //	$scope.deactivate = function(status, teacherID);
 //	teacherDeactivateList.push(status, teacherID);
 //	console.log(teacherDeactivateList);
