@@ -63,7 +63,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
+        controller: 'studentsCtrl',
         templateUrl: "partials/markAttendance.html"
       }
     }
@@ -76,7 +76,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
+        controller: 'studentsCtrl',
         templateUrl: "partials/viewAttendance.html"
       }
     }
