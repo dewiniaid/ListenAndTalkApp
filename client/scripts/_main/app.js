@@ -65,6 +65,17 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     },
     data: { requiresLogin: true }
   })
+  .state('activity.update',{
+    views: {
+      "nav_side": {
+        templateUrl: "partials/activity.sidenav.html"
+      },
+      "content": {
+        templateUrl: "partials/activity.update.html"
+      }
+    },
+    data: { requiresLogin: true }
+  })
   .state('newstudent', {
     url: '/newstudent',
     views: {

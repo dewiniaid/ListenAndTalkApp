@@ -12,6 +12,11 @@ app.controller('activityCtrl', function($scope, mainFactory, $window, $state) {
       name: "View",
       data_state: "activity.view",
       data_icon: "glyphicon glyphicon-eye-open"
+    },
+    {
+      name: "Update",
+      data_state: "activity.update",
+      data_icon: "glyphicon glyphicon-pencil"
     }];
     $scope.state = $scope.sidenavList[0];
     $state.transitionTo($scope.state["data_state"]);
