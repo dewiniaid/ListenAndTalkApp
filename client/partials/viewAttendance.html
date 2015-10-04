@@ -4,9 +4,37 @@
       <div class="panel-body">
 
         <h1>View History</h1>
-          <select class="form-control" >
-                <option ng-repeat="student in students" value="{{student.id}}">{{student.name_first}} {{student.name_last}}</option>
-            </select>
+          <div class='row'>
+                <form>
+                    <div class='col-sm-4'>
+                        <label>Activities</label>
+                        <select class="form-control" >
+                            <option ng-repeat="student in students" value="{{student.id}}">{{student.name_first}} {{student.name_last}}</option>
+                        </select>
+                    </div>
+<!--
+                    <div class='col-sm-4'>
+                         Need to add multiple checkbox dropdown for categories (Class, Therapy, Extra-Curricular) 
+                    </div>
+-->
+                    <div class='col-sm-4'>
+                        <label>From</label>
+                        <input type="date" ng-model="filter.fromDate" class="form-control">
+                    </div>
+                    <div class='col-sm-4'>
+                        <label>To</label>
+                        <input type="date" ng-model="filter.toDate" class="form-control">
+                    </div>
+                    <div class="col-sm-12">
+                        <button type="submit" class="btn btn-default" ng-click="searchByActivityAndDate(filter)">Search</button>
+                    </div>
+                </form>
+        </div>
+          
+          
+          
+          
+          
 
 <!--
         <label>Search: <input ng-model="searchText"></label>
