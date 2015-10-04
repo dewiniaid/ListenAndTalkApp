@@ -84,4 +84,3 @@ SELECT COUNT(DISTINCT student_id) FROM activity_enrollment;
 SELECT * FROM activity_enrollment ORDER BY student_id;
 COMMIT;
 
-GRANT ALL PRIVILEGES 
