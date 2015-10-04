@@ -5,18 +5,20 @@
 
         <h1>View History</h1>
 
-        <div class="table-responsive">
-          <table class="table">
-              <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Anna</td>
-                    <td>Pitt</td>
-                    <td>35</td>
-                  </tr>
-                </tbody>
-            </table>
-        </div>
+
+        <label>Search: <input ng-model="searchText"></label>
+        <table class="table table-striped">
+          <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+          </tr>
+          <tr ng-repeat="student in students | filter: searchText">
+            <th>{{student.id}}</th>
+            <th>{{student.name_first}}</th>
+            <th>{{student.name_last}}</th>
+          </tr>
+        </table>
       </div>
     </div>
 
