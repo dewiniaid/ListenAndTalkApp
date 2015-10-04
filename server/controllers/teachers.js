@@ -1,19 +1,23 @@
+var db = require('../config/database_interface.js')();
+
 module.exports = (function(){
     return {
       getTeacherByEmail : function(req, res) {
-        var query = {
-            text: "SELECT * FROM staff WHERE email = $1",
-            values: [req.params.email]
-        };
+        var email = req.params.email;
+        var query = db.getTeacherByEmailQuery(email);
         db.query(query, function(result){
           res.status(200).json(result);
         });
       },
       getTeacherById : function(req, res){
-        var query = {
-            text: "SELECT * FROM staff WHERE id = $1",
-            values: [req.params.id]
-        };
+        var staffId = req.params.id;
+        var query = db.getTeacherByIdQuery(staffId);
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
+      getTeacherInfo : function(req, res){
+        var query = db.getAllTeachersQuery();
         db.query(query, function(result){
           res.status(200).json(result);
         });

@@ -4,6 +4,7 @@ app.factory('mainFactory', function ($http, Restangular, $window){
   var factory = {};
 
   factory.test = function(callback) {
+    // /api/test
     Restangular.one('api', 'test').get()
       .then(function(result){
         callback(result);
@@ -16,6 +17,15 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   };
+
+  // Student
+  factory.getAllStudents = function(callback) {
+    Restangular.all('api/v1/students').getList()
+      .then(function(result){
+        callback(result);
+      });
+  };
+
 
   return factory;
 });

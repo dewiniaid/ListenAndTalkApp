@@ -4,23 +4,21 @@
       <div class="panel-body">
 
         <h1>View History</h1>
+
+
         <label>Search: <input ng-model="searchText"></label>
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <!-- <th>Attendance</th> -->
-              <!-- <th>Comments</th> -->
-            </tr>
-            <tr ng-repeat="friend in friends | filter:searchText">
-              <td>{{ friend.name }}</td>
-              <td>{{ friend.phone }}</td>
-              <!-- <td>{{  }}</td> -->
-              <!-- <td>{{  }}</td> -->
-            </tr>
-          </table>
-        </div>
+        <table class="table table-striped">
+          <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+          </tr>
+          <tr ng-repeat="student in students | filter: searchText">
+            <th>{{student.id}}</th>
+            <th>{{student.name_first}}</th>
+            <th>{{student.name_last}}</th>
+          </tr>
+        </table>
       </div>
     </div>
 
