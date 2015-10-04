@@ -1,0 +1,48 @@
+SET search_path=listenandtalk,public;
+
+-- Reference for some queries.
+
+
+SELECT t.* FROM (
+
+-- Retrieve students who are rostered for a single date OR have attendance for that single date.
+(
+SELECT 
+	-- t.date, student.*, activity.*, a.*
+	 student.id AS student_id
+	,student.name_first
+	,student.name_last
+	,activity.id AS activity_id
+	,a.date_entered
+	,a.status_id
+	,a.comment
+FROM
+	activity_enrollment AS ae
+	INNER JOIN student ON ae.student_id=student.id
+	INNER JOIN activity ON ae.activity_id=activity.id
+	LEFT JOIN attendance AS a ON a.student_id=student.id AND a.activity_id=activity.id AND a.date='2015-10-01'
+WHERE
+	'2015-10-01' BETWEEN activity.start_date AND activity.end_date
+	AND '2015-10-01' BETWEEN ae.start_date AND COALESCE(ae.end_date, 'infinity')
+)
+UNION DISTINCT
+(
+SELECT 
+	-- t.date, student.*, activity.*, a.*
+	 student.id AS student_id
+	,student.name_first
+	,student.name_last
+	,activity.id AS activity_id
+	,a.date_entered
+	,a.status_id
+	,a.comment
+FROM
+	attendance AS a 
+	INNER JOIN student ON student.id=a.student_id
+	INNER JOIN activity ON activity.id=a.activity_id
+WHERE
+	a.date='2015-10-01'
+)
+
+) AS t
+ORDER BY t.name_first, t.name_last
