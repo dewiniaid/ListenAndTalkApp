@@ -135,7 +135,6 @@ module.exports = function() {
 
     getAllActivitiesQuery : function() {
       return "SELECT * from "+ ACTIVITY_TABLE;
-<<<<<<< HEAD
     },
 
     getAllStatusQuery : function(){
@@ -145,12 +144,6 @@ module.exports = function() {
     getTeachersQuery : function(){
       return "SELECT * from "+ TEACHER_TABLE;
     },
-=======
-    }
-    // getAllActivityQuery : function(){
-    //   return "SELECT * from "+ ACTIVITY_TABLE;
-    // }
->>>>>>> a4e6dffee0bbf04410edc25eefd869433c7b3e2b
 
     getActivityByTeacherEmailQuery : function(email){
       return {
