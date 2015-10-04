@@ -29,16 +29,16 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     },
     data: { requiresLogin: true }
   })
-  .state('test', {
-    url: '/test',
+  .state('newstudent', {
+    url: '/newstudent',
     views: {
       "nav_top": {
         controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
-        templateUrl: "partials/test.html"
+        controller: 'studentsCtrl',
+        templateUrl: "partials/newstudent.html"
       }
     }
   })

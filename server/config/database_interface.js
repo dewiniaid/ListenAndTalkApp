@@ -131,6 +131,14 @@ module.exports = function() {
       };
     },
 
+    removeStudentQuery : function(id) {
+      return {
+          text: "DELETE FROM "+ STUDENT_TABLE +" WHERE id = $1",
+          values: [id],
+          name: 'remove student by id'
+      };
+    },
+
     addNewTeacherQuery : function(firstName, lastName, email){
       return {
           text: "INSERT INTO "+ TEACHER_TABLE +"(name_first, name_last, email) VALUES ($1, $2, $3)",
