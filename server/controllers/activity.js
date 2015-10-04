@@ -8,7 +8,15 @@ module.exports = (function(){
           res.status(200).json(result);
         });
       },
-      getAllDetailActivity : function(req, res){
+
+      getActivityById : function(req, res) {
+        var query = db.getActivityByIdQuery(req.params.id);
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
+
+      getAllDetailActivity : function(req, res) {
         var query = db.getAllDetailActivityQuery();
         db.query(query, function(result){
           res.status(200).json(result);

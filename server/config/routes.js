@@ -62,6 +62,10 @@ module.exports = function(app) {
     activity.getAllActivity(req, res);
   });
 
+  app.get('/api/v1/activity/:id', function(req, res){
+    activity.getActivityById(req, res);
+  });
+
   app.get('/api/v1/detailactivity', function(req, res){
     activity.getAllDetailActivity(req, res);
   });

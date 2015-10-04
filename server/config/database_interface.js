@@ -223,6 +223,13 @@ module.exports = function() {
       };
     },
 
+    getActivityByIdQuery : function(id){
+      return {
+          text: "SELECT * FROM " + ACTIVITY_TABLE + " WHERE id = $1",
+          values: [id],
+          name: 'activityId'
+        };
+      },
     getAllCategoriesQuery : function(){
       return {
           text: "SELECT * FROM " + CATEGORY_TABLE,
@@ -265,6 +272,5 @@ module.exports = function() {
           name: 'Add Activity'
       };
     }
-
   };
 };

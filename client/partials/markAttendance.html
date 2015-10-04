@@ -19,7 +19,7 @@
                     </div>
                 </form>
         </div>
-        <h1>Mark Attendance</h1>
+        <h1>Mark Attendance for {{ activityName }}</h1>
         <table class="table table-striped">
           <tr>
             <th>First Name</th>
@@ -69,15 +69,7 @@
                     </span>
 
 
-
-
-
-
-                   
-
-
-
-                    <textarea ng-model="comment" ng-change="addComment(comment, student.student_id)">{{ student.comment }}</textarea>
+                    <textarea ng-model="student.comment" ng-change="addComment(student.comment, student.student_id)">{{ student.comment }}</textarea>
                 </form>
             </td>
           </tr>
