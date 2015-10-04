@@ -12,7 +12,7 @@ module.exports = function(app) {
     students.getAllStudents(req, res);
   });
 
-  //This will return all the students for a particular activity id for a given date
+  //This will return the roster of students for a given avtivity
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
     students.getAllStudentsByActivityAndDate(req, res);
@@ -79,4 +79,5 @@ module.exports = function(app) {
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
   });
+
 }
