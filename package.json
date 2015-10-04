@@ -13,6 +13,7 @@
     "express": "^4.13.1",
     "express-jwt": "^3.1.0",
     "moment": "^2.10.3",
+    "pg": "^4.4.2",
     "request": "^2.60.0"
   },
   "devDependencies": {

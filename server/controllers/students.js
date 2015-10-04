@@ -1,10 +1,16 @@
 module.exports = (function(){
     return {
       getAllStudents : function(req, res){
-        res.status(200).send("All the students are returned");
+        var query = "SELECT * FROM student ORDER BY id ASC";
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
       },
       getStudentById : function(req, res){
-        res.status(200).send("Student returned by ID");
+        var query = "SELECT * FROM student WHERE id = " + req.params.id;
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
       },
       putStudentById : function(req, res){
         res.status(200).send("Student are put on this endpoint");
