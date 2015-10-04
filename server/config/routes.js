@@ -1,4 +1,3 @@
-var test = require("../controllers/cTest.js");
 var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
 
