@@ -5,6 +5,7 @@ var pg = require('pg');
   var STUDENT_TABLE = "student";
   var TEACHER_TABLE = "staff";
   var LOCATION_TABLE = "location";
+  var CATEGORY_TABLE = "category";
   var ATTENDANCE_STATUS_TABLE = "attendance_status";
   var ACTIVITY_TABLE = "activity";
   var ACTIVITY_ENROLLMENT_TABLE = "activity_enrollment";
@@ -219,6 +220,49 @@ module.exports = function() {
           text: "SELECT * FROM " + ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
           values: [email],
           name: 'teacherEmail'
+      };
+    },
+
+    getAllCategoriesQuery : function(){
+      return {
+          text: "SELECT * FROM " + CATEGORY_TABLE,
+          name: 'get all category'
+      };
+    },
+
+    getAllLocationsQuery : function(){
+      return {
+          text: "SELECT * FROM " + LOCATION_TABLE,
+          name: 'get all location'
+      };
+    },
+
+    getAllDetailActivityQuery : function(){
+      return {
+          text: "SELECT activity.id AS activity_id, \
+                activity.name AS activity_name, \
+                activity.staff_id AS staff_id, \
+                allow_dropins, \
+                start_date, \
+                end_date, \
+                concat_ws(' ', staff.name_first, staff.name_last)  AS staff_name, \
+                activity.category_id AS category_id, \
+                category.name AS category_name, \
+                activity.location_id AS location_id, \
+                location.name AS location_name \
+                FROM activity \
+                LEFT JOIN staff ON activity.staff_id = staff.id \
+                LEFT JOIN category ON activity.category_id = category.id \
+                LEFT JOIN location ON activity.location_id = location.id",
+          name: 'Get all detail activity'
+      };
+    },
+
+    addActivityQuery : function(name, staff_id, category_id, location_id, allow_drops, start_date, end_date){
+      return {
+          text: "INSERT INTO activity (name, staff_id, location_id, category_id, allow_dropins, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+          values: [name, staff_id, category_id, location_id, allow_drops, start_date, end_date],
+          name: 'Add Activity'
       };
     }
 
