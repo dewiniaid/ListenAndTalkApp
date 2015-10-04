@@ -28,7 +28,7 @@ module.exports = (function(){
           req.body.staff_id,
           req.body.category_id,
           req.body.location_id,
-          req.body.allow_dropins,
+          req.body.allow_dropins || false,
           req.body.start_date,
           req.body.end_date
         );
