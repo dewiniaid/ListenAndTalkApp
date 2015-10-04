@@ -2,6 +2,7 @@ var app = angular.module('app');
 
 app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $state) {
   $scope.auth = auth;
+  
 
   mainFactory.test(function(result) {
     $scope.test = result;
