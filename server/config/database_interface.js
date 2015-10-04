@@ -54,13 +54,13 @@ module.exports = function() {
       };
     },
 
-    getTeacherByEmailQuery : function(id){
-      return {
-          text: "SELECT * FROM " + TEACHER_TABLE + " WHERE id = $1",
-          values: [id],
-          name: 'teacherId'
-      };
-    },
+    // getTeacherById : function(id){
+    //   return {
+    //       text: "SELECT * FROM " + TEACHER_TABLE + " WHERE id = $1",
+    //       values: [id],
+    //       name: 'teacherId'
+    //   };
+    // },
 
     getAllTeachersQuery : function(){
       return "SELECT * FROM " + TEACHER_TABLE;
