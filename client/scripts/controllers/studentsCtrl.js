@@ -53,19 +53,26 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
 	} else {
 		studentsToCheckIn[studentID] = {"status": status};
 	}
-  var index = -1;
-  for (var i = 0; i < $scope.students.length; i++) {
-    if (studentID == $scope.students[i].student_id)
-      index = i;
+    var index = -1;
+    for (var i = 0; i < $scope.students.length; i++) {
+      if (studentID == $scope.students[i].student_id)
+        index = i;
+      }
+    $scope.students[index].status_id = status;
   }
-  $scope.students[index].status_id = status;
-    }
 
   $scope.addComment = function(comment, studentID) {
   	if (studentsToCheckIn[studentID]) {
 		studentsToCheckIn[studentID]["comment"] = comment;
 	} else {
 		studentsToCheckIn[studentID] = {"comment": comment};
+
+        var index = -1;
+        for (var i = 0; i < $scope.students.length; i++) {
+           if (studentID == $scope.students[i].student_id)
+              index = i;
+        }
+        studentsToCheckIn[studentID]["status"] = $scope.students[index].status_id;
 	}
   	console.log(studentsToCheckIn);
   }

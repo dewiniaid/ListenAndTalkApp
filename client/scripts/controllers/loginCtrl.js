@@ -1,6 +1,8 @@
 angular.module('app').controller('loginCtrl', ['$scope', '$http', 'auth', 'store', '$location', 'mainFactory',
 function ($scope, $http, auth, store, $location, mainFactory) {
+  $scope.error = "";
   $scope.login = function () {
+    $scope.error = "";
     auth.signin({}, function (profile, token) {
       // Pass profile.email instead of "staff1@example.com" to make sure only staff can access
       store.set('profile', profile);
@@ -19,7 +21,7 @@ function ($scope, $http, auth, store, $location, mainFactory) {
           }
       });
     }, function (error) {
-      console.log("There was an error logging in", error);
+      $scope.error = error;
     });
   }
 }]);

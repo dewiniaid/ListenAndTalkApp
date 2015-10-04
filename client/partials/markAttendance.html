@@ -34,12 +34,12 @@
                     <!-- status 1 is present -->
                     <span ng-if="student.status_id == 1">
                         <label class="radio-inline">
-                        <input type="radio" ng-model="student.status_id" ng-value="1" ng-change="checkin(status, student.student_id)"> Present
+                        <input type="radio" ng-model="student.status_id" ng-value="1" ng-change="checkin(status, student.student_id)" checked> Present
                         </label>
                     </span>
                     <span ng-if="student.status_id != 1">
                         <label class="radio-inline">
-                        <input type="radio" ng-model="status" ng-value="1" ng-change="checkin(status, student.student_id)"> Present
+                        <input type="radio" ng-model="status" ng-value="1" ng-change="checkin(status, student.student_id)" checked> Present
                         </label>
                     </span>
                     
@@ -47,24 +47,24 @@
                     <!-- status 2 is absent -->
                     <span ng-if="student.status_id == 2">
                         <label class="radio-inline">
-                        <input type="radio" ng-model="student.status_id" ng-value="2" ng-change="checkin(status, student.student_id)"> Absent
+                        <input type="radio" ng-model="student.status_id" ng-value="2" ng-change="checkin(status, student.student_id)" checked> Absent
                         </label>
                     </span>
                     <span ng-if="student.status_id != 2">
                         <label class="radio-inline">
-                        <input type="radio" ng-model="status" ng-value="2" ng-change="checkin(status, student.student_id)"> Absent
+                        <input type="radio" ng-model="status" ng-value="2" ng-change="checkin(status, student.student_id)" checked> Absent
                         </label>
                     </span>
 
                     <!-- status 3 is absent/excused -->
                     <span ng-if="student.status_id == 3">
                         <label class="radio-inline">
-                        <input type="radio" ng-model="student.status_id" ng-value="3" ng-change="checkin(status, student.student_id)"> Absent/Excused
+                        <input type="radio" ng-model="student.status_id" ng-value="3" ng-change="checkin(status, student.student_id)" checked> Absent/Excused
                         </label>
                     </span>
                     <span ng-if="student.status_id != 3">
                         <label class="radio-inline">
-                        <input type="radio" ng-model="status" ng-value="3" ng-change="checkin(status, student.student_id)"> Absent/Excused
+                        <input type="radio" ng-model="status" ng-value="3" ng-change="checkin(status, student.student_id)" checked> Absent/Excused
                         </label>
                     </span>
 

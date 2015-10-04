@@ -27,11 +27,14 @@ module.exports = function(app) {
     console.log('test');
     students.getAllStudentsByActivityAndDate(req, res);
   });
-
+  app.get('/api/v1/students/date/:date', function(req, res){
+    students.getAllStudentsByDate(req, res);
+  });
   //Student info for a particular studentID
   app.get('/api/v1/students/:id', function(req, res){
     students.getStudentById(req, res);
   });
+  
 
   //Remove Student by studentID
   app.delete('/api/v1/students/:id', function(req, res){
