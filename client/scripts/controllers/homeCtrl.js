@@ -24,7 +24,7 @@ app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $
     
    mainFactory.getAllStudents(function(result) {
     $scope.students = result;
-         console.log(result);
+         // console.log(result);
   });
   
 });
