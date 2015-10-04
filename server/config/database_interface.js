@@ -153,7 +153,6 @@ module.exports = function() {
 
     dectivateStudentQuery : function(id, deactivate){
       if(deactivate){
-        console.log(deactivate);
         return {
             text: "UPDATE "+ STUDENT_TABLE + " SET date_inactive = now() WHERE id = $1",
             values: [id],
@@ -170,7 +169,6 @@ module.exports = function() {
 
     dectivateTeacherQuery : function(id, deactivate){
       if(deactivate){
-        console.log(deactivate);
         return {
             text: "UPDATE "+ TEACHER_TABLE + " SET date_inactive = now() WHERE id = $1",
             values: [id],
@@ -184,6 +182,21 @@ module.exports = function() {
         };
       }
     },
+
+    getStudentHistoryQuery : function(id){
+      return {
+          text: "SELECT * from " + ATTENDANCE_TABLE +" WHERE student_id = $1",
+          values: [id]
+      };
+    },
+
+    getStudentHistoryQueryByDate : function(id, startDate, endDate){
+      return {
+          text: "SELECT * from " + ATTENDANCE_TABLE +" WHERE student_id = $1 and date_entered between $2 and $3",
+          values: [id, startDate, endDate]
+      };
+    },
+
     getActivityByTeacherEmailQuery : function(email){
       return {
           text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
