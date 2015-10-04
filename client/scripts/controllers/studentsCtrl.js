@@ -82,7 +82,7 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
   }
 
   $scope.finalCheckIn = function() {
-	mainFactory.checkIn(1, studentsToCheckIn, getToday(), function(result) {
+	mainFactory.checkIn($scope.filter.activityId, studentsToCheckIn, getToday(), function(result) {
 		console.log('checked in');
 	})
   }
