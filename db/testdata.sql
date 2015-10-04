@@ -1,6 +1,5 @@
-﻿ROLLBACK; BEGIN;
+﻿BEGIN;
 SET search_path=listenandtalk,public;
-SET SESSION AUTHORIZATION developer;
 
 -- Attendance statuses.
 -- Probably production data too.
@@ -77,10 +76,12 @@ RETURNING *;
 
 
 
-INSERT INTO activity_enrollment (activity_id, student_id, start_time, end_time)
+INSERT INTO activity_enrollment (activity_id, student_id, start_date, end_date)
 SELECT a.id, s.id, '-infinity', CASE WHEN ((a.id+s.id)%10)::BOOLEAN THEN NULL::date ELSE 'now'::date END
 FROM activity AS a INNER JOIN student AS s ON ((a.id+s.id)%3 = 0);
 
 SELECT COUNT(DISTINCT student_id) FROM activity_enrollment;
 SELECT * FROM activity_enrollment ORDER BY student_id;
 COMMIT;
+
+GRANT ALL PRIVILEGES 

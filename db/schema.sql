@@ -1,12 +1,7 @@
-﻿-- PostgreSQL-ish, but this is easily changed.
-SET SESSION AUTHORIZATION developer;
-DROP SCHEMA listenandtalk CASCADE;
+﻿DROP SCHEMA IF EXISTS listenandtalk CASCADE;
+
 CREATE SCHEMA listenandtalk;
-GRANT ALL PRIVILEGES ON SCHEMA listenandtalk TO developer;
-SET SEARCH_PATH=listenandtalk, public;
-
-
-
+SET search_path=listenandtalk,public;
 
 CREATE TABLE student (
 	id SERIAL NOT NULL,
@@ -160,7 +155,58 @@ CREATE TABLE attendance ( -- aka "Checkin"
 	-- In the case of a), we probably want to still include this record on any reporting.
 	-- In the case of b), we probably don't want to include this record because we don't care if a student was going to be 
 	-- ... on vacation next week if they're no longer attending.
-	id INT NOT NULL,
+	student_id INT NOT NULL,
+	activity_id INT NOT NULL,
+	date DATE NOT NULL,
+	status_id INT NOT NULL,
+	comment TEXT NULL, -- Optional
+	date_entered TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY(student_id, activity_id, date),
+	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE VIEW attendance_upsert AS SELECT * FROM attendance;
+CREATE OR REPLACE FUNCTION attendance_upsert_tproc()
+RETURNS TRIGGER
+SECURITY INVOKER
+VOLATILE
+LANGUAGE PLPGSQL
+AS $PROC$
+BEGIN
+	LOOP
+		-- Try an update first
+		UPDATE attendance 
+		SET
+			status_id=NEW.status_id,
+			comment=NEW.comment,
+			date_entered=COALESCE(NEW.date_entered, 'now')
+		WHERE
+			student_id=NEW.student_id AND activity_id=NEW.activity_id AND date=NEW.date
+		;
+
+		IF FOUND THEN
+			-- Update found something, so we're done here.
+			RETURN NEW;
+		END IF;
+
+		-- Update affected 0 rows, so try an insert instead.
+		BEGIN
+			INSERT INTO attendance (student_id, activity_id, date, status_id, comment, date_entered)
+			VALUES (NEW.student_id, NEW.activity_id, NEW.date, NEW.status_id, NEW.comment, COALESCE(NEW.date_entered, 'now'));
+			RETURN NEW;
+		EXCEPTION WHEN unique_violation THEN
+			-- Record already exists due to concurrent update.  Retry update by looping again.
+		END;
+	END LOOP;
+END;	
+$PROC$;
+CREATE TRIGGER attendance_upsert_insert INSTEAD OF INSERT ON attendance_upsert FOR EACH ROW EXECUTE PROCEDURE attendance_upsert_tproc();
+
+
+CREATE TABLE attendance_history (
+	-- Archive of past attendance data for future development/reporting.
+	id SERIAL NOT NULL,
 	student_id INT NOT NULL,
 	activity_id INT NOT NULL,
 	date DATE NOT NULL,
@@ -168,8 +214,34 @@ CREATE TABLE attendance ( -- aka "Checkin"
 	comment TEXT NULL, -- Optional
 	date_entered TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY(id),
-	-- PRIMARY KEY(student_id, activity_id, date),
 	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+CREATE OR REPLACE FUNCTION attendance_maintain_history_tproc()
+RETURNS TRIGGER
+SECURITY INVOKER
+VOLATILE
+LANGUAGE PLPGSQL
+AS $PROC$
+BEGIN
+	IF TG_OP='UPDATE' THEN
+		IF ROW(NEW.*) IS NOT DISTINCT FROM ROW(OLD.*) THEN
+			RETURN NEW;	-- Nothing changed!
+		END IF;
+	END IF;
+	
+	INSERT INTO attendance_history (student_id, activity_id, date, status_id, comment, date_entered)
+	VALUES (OLD.student_id, OLD.activity_id, OLD.date, OLD.status_id, OLD.comment, OLD.date_entered);
+	IF TG_OP='UPDATE' THEN
+		RETURN NEW;
+	END IF;
+	RETURN OLD;
+END
+$PROC$;
+CREATE TRIGGER attendance_maintain_history AFTER UPDATE OR DELETE ON attendance FOR EACH ROW EXECUTE PROCEDURE attendance_maintain_history_tproc();
 
+
+
+GRANT ALL PRIVILEGES ON SCHEMA listenandtalk TO backend;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA listenandtalk TO backend;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA listenandtalk TO backend;
