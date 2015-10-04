@@ -216,7 +216,8 @@ module.exports = function() {
 
     getActivityByTeacherEmailQuery : function(email){
       return {
-          text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
+          // text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
+          text: "SELECT * FROM " + ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
           values: [email],
           name: 'teacherEmail'
       };
