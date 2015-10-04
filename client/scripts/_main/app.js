@@ -76,7 +76,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
+        controller: 'viewAttendanceCtrl',
         templateUrl: "partials/viewAttendance.html"
       }
     }
