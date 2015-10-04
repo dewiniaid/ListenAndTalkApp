@@ -1,16 +1,23 @@
 <div class="container-fluid">
-
-  <div class="jumbotron">
-    <h1>Hello, world!</h1>
-    <p>Test API: {{test}}</p>
-      <p>Email: {{ auth.profile.email }}</p>
-    <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>
-  </div>
-
     <div class="legendDiv">
         <fieldset>
             <legend>Activities Assigned to Me:</legend>
-            
+            <div ng-repeat="activity in activityNames">
+                <strong>{{activity.name}}</strong>
+                <a href="#/markAttendance">Mark Attendance</a>
+                
+            </div>
         </fieldset>
     </div>
+    
+    <div class="legendDiv">
+        <fieldset>
+            <legend>View Attendance For:</legend>
+            <select class="form-control">
+                <option ng-repeat="student in students" value="{{student.id}}">{{student.name_first}} {{student.name_last}}
+                </option>
+            </select>
+        </fieldset>
+    </div>
+    
 </div>

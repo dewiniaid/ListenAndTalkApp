@@ -3,44 +3,91 @@
     <div class="panel">
       <div class="panel-body">
         <div class='row'>
-            <div class='col-sm-4'>
                 <form>
-                    <label>Activities</label>
-                    <select class="form-control">
-                        <option ng-repeat="act in activities" value="{{ act['id'] }}">{{ act['name'] }}</option>
-                    </select>
+                    <div class='col-sm-4'>
+                        <label>Activities</label>
+                        <select class="form-control" ng-model="filter.activityId">
+                            <option ng-repeat="act in activities" value="{{ act['id'] }}">{{ act['name'] }}</option>
+                        </select>
+                    </div>
+                    <div class='col-sm-4'>
+                        <label>Date</label>
+                        <input type="date" ng-model="filter.date" class="form-control">
+                    </div>
+                    <div class="col-sm-12">
+                        <button type="submit" class="btn btn-default" ng-click="searchByActivityAndDate(filter)">Search</button>
+                    </div>
                 </form>
-            </div>
         </div>
         <h1>Mark Attendance</h1>
         <table class="table table-striped">
           <tr>
-            <th>ID</th>
             <th>First Name</th>
             <th>Last Name</th>
-            <th>Status</th>
-            <th>Comments</th>
+            <th>Status & Comments</th>
           </tr>
           <tr ng-repeat="student in students">
-            <td>{{student.id}}</td>
             <td>{{student.name_first}}</td>
             <td>{{student.name_last}}</td>
             <td>
                 <form>
-                    <label class="radio-inline">
-                    <input type="radio" ng-model="status" value="present" ng-change="checkin(status, student.id)"> Present
-                    </label>
-                    <label class="radio-inline">
-                    <input type="radio" ng-model="status" value="absent" ng-change="checkin(status, student.id)"> Absent
-                    </label>
-                    <label class="radio-inline">
-                    <input type="radio" ng-model="status" value="excused" ng-change="checkin(status, student.id)"> Excused
-                    </label>
+                    <!-- status 1 is present -->
+                    <span ng-if="student.status_id == 1">
+                        <label class="radio-inline">
+                        <input type="radio" ng-model="student.status_id" ng-value="1" ng-change="checkin(status, student.student_id)"> Present
+                        </label>
+                    </span>
+                    <span ng-if="student.status_id != 1">
+                        <label class="radio-inline">
+                        <input type="radio" ng-model="status" ng-value="1" ng-change="checkin(status, student.student_id)"> Present
+                        </label>
+                    </span>
+                    
+
+                    <!-- status 2 is absent -->
+                    <span ng-if="student.status_id == 2">
+                        <label class="radio-inline">
+                        <input type="radio" ng-model="student.status_id" ng-value="2" ng-change="checkin(status, student.student_id)"> Absent
+                        </label>
+                    </span>
+                    <span ng-if="student.status_id != 2">
+                        <label class="radio-inline">
+                        <input type="radio" ng-model="status" ng-value="2" ng-change="checkin(status, student.student_id)"> Absent
+                        </label>
+                    </span>
+
+                    <!-- status 3 is absent/excused -->
+                    <span ng-if="student.status_id == 3">
+                        <label class="radio-inline">
+                        <input type="radio" ng-model="student.status_id" ng-value="3" ng-change="checkin(status, student.student_id)"> Absent/Excused
+                        </label>
+                    </span>
+                    <span ng-if="student.status_id != 3">
+                        <label class="radio-inline">
+                        <input type="radio" ng-model="status" ng-value="3" ng-change="checkin(status, student.student_id)"> Absent/Excused
+                        </label>
+                    </span>
+
+
+
+
+
+
+                   
+
+
+
+                    <textarea ng-model="comment" ng-change="addComment(comment, student.student_id)">{{ student.comment }}</textarea>
                 </form>
             </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
             <td>
                 <form>
-                    <textarea rows=""></textarea>
+                    <input type="submit" value="Check in" ng-click="finalCheckIn()">
                 </form>
             </td>
           </tr>

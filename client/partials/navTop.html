@@ -1,4 +1,10 @@
-
+<div>
+          <span class="navHeading">Listen and Talk Attendance Tracking</span>
+        <ul class="nav navbar-nav pull-right">
+        <li><a href=""><span class="glyphicon glyphicon-user"></span> Welcome {{ auth.profile.given_name }}!</a></li>
+        <li><a href="#" ng-click="logout()"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
+      </ul>
+</div>
 <nav class="navbar navbar-default" ng-controller="navCtrl" ng-init="init()">
   <div class="container-fluid">
     <div class="navbar-header">
@@ -9,10 +15,6 @@
         <li ng-repeat="nav in navList" ng-class="{active: isActive(nav)}">
           <a href="{{nav.href}}" ng-click="select(nav)" ng-bind="nav.name"></a>
         </li>
-      </ul>
-      <ul class="nav navbar-nav pull-right">
-        <li><a href=""><span class="glyphicon glyphicon-user"></span> Welcome {{ auth.profile.given_name }} {{ auth.profile.family_name }}</a></li>
-        <li><a href="#" ng-click="logout()"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
       </ul>
     </div>
   </div>

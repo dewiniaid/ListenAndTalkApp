@@ -29,29 +29,29 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     },
     data: { requiresLogin: true }
   })
-  .state('test', {
-    url: '/test',
+  .state('newstudent', {
+    url: '/newstudent',
     views: {
       "nav_top": {
         controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
-        templateUrl: "partials/test.html"
+        controller: 'studentsCtrl',
+        templateUrl: "partials/newstudent.html"
       }
     }
   })
-  .state('about', {
-    url: '/about',
+  .state('newstaff', {
+    url: '/newstaff',
     views: {
       "nav_top": {
         controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
-        templateUrl: "partials/about.html"
+        controller: 'staffCtrl',
+        templateUrl: "partials/newstaff.html"
       }
     }
   })

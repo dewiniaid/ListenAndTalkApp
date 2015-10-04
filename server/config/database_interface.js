@@ -125,9 +125,33 @@ module.exports = function() {
 
     addNewStudentQuery : function(firstName, lastName){
       return {
-          text: "",
+          text: "INSERT INTO "+ STUDENT_TABLE +"(name_first, name_last) VALUES ($1, $2)",
           values: [firstName, lastName],
           name: 'adding new student by name'
+      };
+    },
+
+    removeStudentQuery : function(id) {
+      return {
+          text: "DELETE FROM "+ STUDENT_TABLE +" WHERE id = $1",
+          values: [id],
+          name: 'remove student by id'
+      };
+    },
+
+    addNewTeacherQuery : function(firstName, lastName, email){
+      return {
+          text: "INSERT INTO "+ TEACHER_TABLE +"(name_first, name_last, email) VALUES ($1, $2, $3)",
+          values: [firstName, lastName, email],
+          name: 'adding new student by name'
+      };
+    },
+
+    removeTeacherQuery : function(id){
+      return {
+          text: "DELETE FROM "+ TEACHER_TABLE +" WHERE id = $1",
+          values: [id],
+          name: 'remove staff by id'
       };
     },
 
@@ -145,7 +169,6 @@ module.exports = function() {
 
     dectivateStudentQuery : function(id, deactivate){
       if(deactivate){
-        console.log(deactivate);
         return {
             text: "UPDATE "+ STUDENT_TABLE + " SET date_inactive = now() WHERE id = $1",
             values: [id],
@@ -162,7 +185,6 @@ module.exports = function() {
 
     dectivateTeacherQuery : function(id, deactivate){
       if(deactivate){
-        console.log(deactivate);
         return {
             text: "UPDATE "+ TEACHER_TABLE + " SET date_inactive = now() WHERE id = $1",
             values: [id],
@@ -176,9 +198,25 @@ module.exports = function() {
         };
       }
     },
+
+    getStudentHistoryQuery : function(id){
+      return {
+          text: "SELECT * from " + ATTENDANCE_TABLE +" WHERE student_id = $1",
+          values: [id]
+      };
+    },
+
+    getStudentHistoryQueryByDate : function(id, startDate, endDate){
+      return {
+          text: "SELECT * from " + ATTENDANCE_TABLE +" WHERE student_id = $1 and date_entered between $2 and $3",
+          values: [id, startDate, endDate]
+      };
+    },
+
     getActivityByTeacherEmailQuery : function(email){
       return {
-          text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
+          // text: "SELECT * FROM "+ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
+          text: "SELECT * FROM " + ACTIVITY_TABLE +" WHERE staff_id = (SELECT id FROM " + TEACHER_TABLE + " WHERE email = $1)",
           values: [email],
           name: 'teacherEmail'
       };
