@@ -1,4 +1,4 @@
-SET search_path=listenandtalk,public;
+﻿SET search_path=listenandtalk,public;
 
 -- Reference for some queries.
 
@@ -47,7 +47,33 @@ WHERE
 )
 
 ) AS t
-ORDER BY t.name_first,t.name_last;
+ORDER BY t.name_first, t.name_last;
 
 
-SELECT * FROM attendance_status;
+
+
+-- Skeleton for reporting attendance (only uses entries that exist)
+SELECT
+	s.id AS student_id, s.name_first AS student_name_first, s.name_last AS student_name_last,
+	t.id AS staff_id, t.name_first AS staff_name_first, t.name_last AS staff_name_last,
+	
+	act.id AS activity_id, act.name AS activity_name, cat.id AS category_id, cat.name AS category_name,
+	
+	a.date, a.date_entered, a.status_id, a.comment, status.name AS status_name
+
+FROM
+	attendance AS a
+	LEFT JOIN attendance_status AS status ON a.status_id=status.id
+	INNER JOIN activity AS act ON act.id=a.activity_id
+		INNER JOIN staff AS t ON act.staff_id=t.id
+		INNER JOIN category AS cat ON cat.id=act.category_id
+	INNER JOIN student AS s ON a.student_id=s.id
+--
+-- WHERE
+--	staff.id=$1
+--	activity.id=$1
+--	cat.id=$1
+--	a.date BETWEEN $1 AND $2
+--
+
+SELECT * FROM attendance;
