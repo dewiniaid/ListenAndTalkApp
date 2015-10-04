@@ -19,6 +19,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     url: '/',
     views: {
       "nav_top": {
+        controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
