@@ -4,8 +4,71 @@
       <div class="panel-body">
 
         <h1>Settings</h1>
+				<h1>Mark status</h1>
+				<table class="table table-striped setting-table">
+					<tr>
+						<th>ID</th>
+						<th>First Name</th>
+						<th>Last Name</th>
+						<th>Status</th>
+						<th>Comments</th>
+					</tr>
+					<tr ng-repeat="student in students">
+						<td>{{student.id}}</td>
+						<td>{{student.name_first}}</td>
+						<td>{{student.name_last}}</td>
+						<td>
+							<form>
+								<label class="radio-inline">
+									<input type="radio" ng-model="status" value="present" ng-change="checkin(status, student.id)"> Present
+								</label>
+								<label class="radio-inline">
+									<input type="radio" ng-model="status" value="absent" ng-change="checkin(status, student.id)"> Absent
+								</label>
+								<label class="radio-inline">
+									<input type="radio" ng-model="status" value="excused" ng-change="checkin(status, student.id)"> Excused
+								</label>
+							</form>
+						</td>
+						<td>
+							<form>
+								<textarea rows=""></textarea>
+							</form>
+						</td>
+					</tr>
+				</table>
+				<table class="table table-striped setting-table">
+					<tr>
+						<th>ID</th>
+						<th>First Name</th>
+						<th>Last Name</th>
+						<th>Status</th>
+						<th>Comments</th>
+					</tr>
+					<tr ng-repeat="student in students">
+						<td>{{student.name}}</td>
 
-      </div>
-    </div>
+						<td>
+							<form>
+								<label class="radio-inline">
+									<input type="radio" ng-model="status" value="present" ng-change="checkin(status, student.id)"> Present
+								</label>
+								<label class="radio-inline">
+									<input type="radio" ng-model="status" value="absent" ng-change="checkin(status, student.id)"> Absent
+								</label>
+								<label class="radio-inline">
+									<input type="radio" ng-model="status" value="excused" ng-change="checkin(status, student.id)"> Excused
+								</label>
+							</form>
+						</td>
+						<td>
+							<form>
+								<textarea rows=""></textarea>
+							</form>
+						</td>
+					</tr>
+				</table>
+			</div>
+	</div>
 
 </div>
