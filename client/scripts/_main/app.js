@@ -66,7 +66,8 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         controller: 'studentsCtrl',
         templateUrl: "partials/markAttendance.html"
       }
-    }
+    },
+    data: { requiresLogin: true }
   })
   .state('viewAttendance', {
     url: '/viewAttendance',
@@ -79,7 +80,8 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         controller: 'studentsCtrl',
         templateUrl: "partials/viewAttendance.html"
       }
-    }
+    },
+    data: { requiresLogin: true }
   })
   .state('settings', {
     url: '/settings',
@@ -92,7 +94,8 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         controller: 'homeCtrl',
         templateUrl: "partials/settings.html"
       }
-    }
+    },
+    data: { requiresLogin: true }
   })
   .state('login', {
     url: '/login',
@@ -114,7 +117,8 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         controller: 'homeCtrl',
         templateUrl: "partials/userinfo.html"
       }
-    }
+    },
+    data: { requiresLogin: true }
   })
 
   $urlRouterProvider.otherwise('/');

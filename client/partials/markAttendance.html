@@ -2,19 +2,48 @@
 
     <div class="panel">
       <div class="panel-body">
-
+        <div class='row'>
+            <div class='col-sm-4'>
+                <form>
+                    <label>Activities</label>
+                    <select class="form-control">
+                        <option ng-repeat="act in activities" value="{{ act['id'] }}">{{ act['name'] }}</option>
+                    </select>
+                </form>
+            </div>
+        </div>
         <h1>Mark Attendance</h1>
-
         <table class="table table-striped">
           <tr>
             <th>ID</th>
             <th>First Name</th>
             <th>Last Name</th>
+            <th>Status</th>
+            <th>Comments</th>
           </tr>
           <tr ng-repeat="student in students">
-            <th>{{student.id}}</th>
-            <th>{{student.name_first}}</th>
-            <th>{{student.name_last}}</th>
+            <td>{{student.id}}</td>
+            <td>{{student.name_first}}</td>
+            <td>{{student.name_last}}</td>
+            <td>
+                <!-- <form> -->
+                    <label class="radio-inline">
+                    <input type="radio" ng-model="status" value="present" ng-change="checkin(status)"> Present
+                    </label>
+                    <label class="radio-inline">
+                    <input type="radio" ng-model="status" value="absent" ng-change="checkin(status)"> Absent
+                    </label>
+                    <label class="radio-inline">
+                    <input type="radio" ng-model="status" value="excused" ng-change="checkin(status)"> Excused
+                    </label>
+                <!-- </form> -->
+                {{ status }}
+            </td>
+            <td>
+                <form>
+                    <textarea rows=""></textarea>
+                </form>
+            </td>
           </tr>
         </table>
       </div>

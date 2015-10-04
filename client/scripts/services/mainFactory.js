@@ -1,6 +1,6 @@
 var app = angular.module('app');
 
-app.factory('mainFactory', function($http, Restangular, $window){
+app.factory('mainFactory', function ($http, Restangular, $window){
   var factory = {};
 
   // factory.test_post = function(postData, callback) {
@@ -18,6 +18,13 @@ app.factory('mainFactory', function($http, Restangular, $window){
       });
   };
 
+  factory.getAllActivities = function(callback) {
+    Restangular.all('api/v1/activities').getList()
+      .then(function(result){
+        callback(result);
+      });
+  };
+
   // Teacher
   factory.getTeacherByEmail = function(email, callback) {
     Restangular.all('api/v1/teachers/' + email).getList()
@@ -25,6 +32,10 @@ app.factory('mainFactory', function($http, Restangular, $window){
         callback(result);
       });
   };
+
+  factory.checkIn = function(callback) {
+    callback();
+  }
 
 
   return factory;
