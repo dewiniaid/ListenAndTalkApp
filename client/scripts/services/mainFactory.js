@@ -3,12 +3,12 @@ var app = angular.module('app');
 app.factory('mainFactory', function ($http, Restangular, $window){
   var factory = {};
 
-  // factory.test_post = function(postData, callback) {
-  //   Restangular.all('api/test_post').post(postData)
-  //     .then(function(result){
-  //       callback(result);
-  //     });
-  // };
+   factory.getTeachers = function(callback) {
+		 Restangular.all('/api/v1/teachers/').getList()
+       .then(function(result){
+         callback(result);
+       });
+   };
 
   // Student
   factory.getAllStudents = function(callback) {
@@ -19,7 +19,7 @@ app.factory('mainFactory', function ($http, Restangular, $window){
   };
 
   factory.getAllActivities = function(callback) {
-    Restangular.all('api/v1/activities').getList()
+    Restangular.all('api/v1/activity').getList()
       .then(function(result){
         callback(result);
       });
@@ -33,9 +33,26 @@ app.factory('mainFactory', function ($http, Restangular, $window){
       });
   };
 
-  factory.checkIn = function(callback) {
-    callback();
+
+  factory.searchByActivityAndDate = function(activityId, date, callback) {
+    Restangular.all('/api/v1/students/activity').getList({"activityId": activityId, "date": date})
+      .then(function(result){
+        callback(result);
+      });
   }
+
+
+  factory.checkIn = function(activity_id, studentsToCheckIn, date, callback) {
+    var students = {"data": []};
+    // package data to be sent over to controller
+    for (key in studentsToCheckIn) {
+      students["data"].push({"STUDENT_ID": key, "STATUS_ID": studentsToCheckIn[key]["status"], "COMMENT": studentsToCheckIn[key]["comment"], "ACTIVITY_ID": activity_id, "DATE": date})
+    }
+    Restangular.all('/api/v1/students/activity').post(students)
+    .then(function(result){
+      callback(result);
+    });
+  };
 
 
   return factory;

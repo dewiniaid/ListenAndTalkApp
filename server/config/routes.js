@@ -20,6 +20,7 @@ module.exports = function(app) {
   //This will return the roster of students for a given avtivity
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
+    console.log('test');
     students.getAllStudentsByActivityAndDate(req, res);
   });
 

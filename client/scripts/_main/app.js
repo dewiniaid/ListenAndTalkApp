@@ -91,7 +91,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'homeCtrl',
+				controller: 'settingCtrl',
         templateUrl: "partials/settings.html"
       }
     },
