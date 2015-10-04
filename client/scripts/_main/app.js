@@ -42,19 +42,6 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
       }
     }
   })
-  .state('about', {
-    url: '/about',
-    views: {
-      "nav_top": {
-        controller: 'homeCtrl',
-        templateUrl: "partials/navTop.html"
-      },
-      "main": {
-        controller: 'homeCtrl',
-        templateUrl: "partials/about.html"
-      }
-    }
-  })
   .state('markAttendance', {
     url: '/markAttendance',
     views: {

@@ -4,8 +4,11 @@
       <div class="panel-body">
 
         <h1>View History</h1>
+          <select class="form-control" >
+                <option ng-repeat="student in students" value="{{student.id}}">{{student.name_first}} {{student.name_last}}</option>
+            </select>
 
-
+<!--
         <label>Search: <input ng-model="searchText"></label>
         <table class="table table-striped">
           <tr>
@@ -14,11 +17,12 @@
             <th>Last Name</th>
           </tr>
           <tr ng-repeat="student in students | filter: searchText">
-            <th>{{student.id}}</th>
-            <th>{{student.name_first}}</th>
-            <th>{{student.name_last}}</th>
+            <td>{{student.id}}</td>
+            <td>{{student.name_first}}</td>
+            <td>{{student.name_last}}</td>
           </tr>
         </table>
+-->
       </div>
     </div>
 

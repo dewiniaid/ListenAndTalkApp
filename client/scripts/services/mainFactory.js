@@ -32,6 +32,13 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   };
+    
+  factory.getActivityByTeacherEmail = function(email, callback) {
+    Restangular.all('api/v1/teachers/' + email + '/activity').getList()
+      .then(function(result){
+        callback(result);
+      });
+  };  
 
   factory.checkIn = function(callback) {
     callback();

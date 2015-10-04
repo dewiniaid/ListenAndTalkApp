@@ -16,4 +16,15 @@ app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $
   //     console.log(result);
   //   });
   // }
+  
+  //auth.profile.email
+  mainFactory.getActivityByTeacherEmail("staff1@example.com", function(result) {
+    $scope.activityNames = result;
+  });
+    
+     mainFactory.getAllStudents(function(result) {
+    $scope.students = result;
+         console.log(result);
+  });
+  
 });
