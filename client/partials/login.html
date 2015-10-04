@@ -1,3 +1,6 @@
+<div ng-if="$scope.error">
+	<h2 style="color:red">{{$scope.error}}</h2>
+</div>
 <div class="login_block">
         <h1>Please use your Google credentials to login!</h1>
         <button class="btn btn-primary btn-lg" ng-click="login()">Google Login</button>

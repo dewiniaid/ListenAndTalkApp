@@ -17,6 +17,12 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   };
+  factory.getAllStudentsByDate = function(date, callback) {
+    Restangular.all('api/v1/students/date/'+ date).getList()
+      .then(function(result){
+        callback(result);
+      });
+  };
 
   factory.getAllActivities = function(callback) {
     Restangular.all('api/v1/activity').getList()
@@ -123,7 +129,12 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   }
-
+factory.searchHistoryByStudent = function(studentId, callback) {
+    Restangular.all('/api/v1/students/'+ studentId +'/activities').getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
 
   factory.checkIn = function(activity_id, studentsToCheckIn, date, callback) {
     var students = {"data": []};

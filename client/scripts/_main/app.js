@@ -113,7 +113,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
         templateUrl: "partials/navTop.html"
       },
       "main": {
-        controller: 'studentsCtrl',
+        controller: 'viewAttendanceCtrl',
         templateUrl: "partials/viewAttendance.html"
       }
     },

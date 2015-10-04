@@ -34,6 +34,15 @@ module.exports = (function(){
           res.status(200).send(result);
         });
       },
+      getAllStudentsByDate : function(req, res){
+        console.log(req.params, req.query);
+        var activityId = null;
+        var date = req.params.date;
+        var query = db.getAllStudentsByActivityAndDateQuery(activityId, date);
+        db.query(query, function(result){
+          res.status(200).send(result);
+        });
+      },
 
       /*
       {
