@@ -7,6 +7,7 @@ SET SEARCH_PATH=listenandtalk, public;
 
 
 
+
 CREATE TABLE student (
 	id SERIAL NOT NULL,
 	name_first VARCHAR NOT NULL,
@@ -113,8 +114,8 @@ CREATE TABLE activity_enrollment (
 	id SERIAL NOT NULL,
 	activity_id INT NOT NULL,
 	student_id INT NOT NULL,
-	start_time DATE NOT NULL,
-	end_time DATE NULL,
+	start_date DATE NOT NULL,
+	end_date DATE NULL,
 		
 	PRIMARY KEY(id),
 	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -171,3 +172,4 @@ CREATE TABLE attendance ( -- aka "Checkin"
 	FOREIGN KEY(student_id) REFERENCES student(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+

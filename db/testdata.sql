@@ -53,6 +53,7 @@ VALUES
 RETURNING *;
 
 UPDATE staff SET date_inactive='now' WHERE name_first='Deleted';
+UPDATE staff SET email='staff' || id || '@example.com' WHERE email IS NULL;
 
 
 
