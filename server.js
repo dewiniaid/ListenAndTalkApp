@@ -16,6 +16,7 @@ var bodyParser = require("body-parser");
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
 
+db = require('./server/config/database_interface.js')();
 require("./server/config/routes.js")(server);
 
 server.listen(config.server_port, function(){
