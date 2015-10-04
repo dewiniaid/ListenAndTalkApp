@@ -2,7 +2,6 @@ var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
 var activity = require("../controllers/activity.js");
 var status = require("../controllers/status.js");
-var activities = require("../controllers/activities.js");
 
 module.exports = function(app) {
 
@@ -13,6 +12,11 @@ module.exports = function(app) {
     students.getAllStudents(req, res);
   });
 
+
+  //Deactivate students
+  app.put('/api/v1/students/:id', function(req, res){
+    students.putStudentById(req, res);
+  })
   //This will return the roster of students for a given avtivity
   //ID CALL2
   app.get('/api/v1/students/activity', function(req, res){
@@ -52,6 +56,8 @@ module.exports = function(app) {
   })
 
 
+
+
   // ===================
   // Status API
   // ===================
@@ -74,7 +80,6 @@ module.exports = function(app) {
   app.get('/api/v1/teachers/:id', function(req, res){
     teachers.getTeacherById(req, res);
   });
-
   app.put('/api/v1/teachers/:id', function(req, res){
     teachers.updateTeacherInfo(req, res);
   });
@@ -82,10 +87,4 @@ module.exports = function(app) {
     teachers.addNewTeacher(req, res);
   });
 
-  // ===================
-  // Activity API
-  // ===================
-  app.get('/api/v1/activities', function(req, res){
-    activities.getAllActivities(req, res);
-  });
 }
