@@ -3,6 +3,7 @@ var app = angular.module('app');
 app.controller('staffCtrl', function($scope, mainFactory, $window, $state) {
   mainFactory.getAllStaff(function(result) {
     $scope.staffs = result;
+    console.log(result);
   });
 
   $scope.addNewStaff = function() {

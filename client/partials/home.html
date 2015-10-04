@@ -4,7 +4,7 @@
             <legend>Activities Assigned to Me:</legend>
             <div ng-repeat="activity in activityNames">
                 <strong>{{activity.name}}</strong>
-                <a href="">Mark Attendance</a>
+                <a href="#/markAttendance">Mark Attendance</a>
                 
             </div>
         </fieldset>
@@ -13,8 +13,9 @@
     <div class="legendDiv">
         <fieldset>
             <legend>View Attendance For:</legend>
-            <select class="form-control" >
-                <option ng-repeat="student in students" value="{{student.id}}">{{student.name_first}} {{student.name_last}}</option>
+            <select class="form-control">
+                <option ng-repeat="student in students" value="{{student.id}}">{{student.name_first}} {{student.name_last}}
+                </option>
             </select>
         </fieldset>
     </div>

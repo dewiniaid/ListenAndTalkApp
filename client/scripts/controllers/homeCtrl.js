@@ -22,7 +22,7 @@ app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $
     $scope.activityNames = result;
   });
     
-     mainFactory.getAllStudents(function(result) {
+   mainFactory.getAllStudents(function(result) {
     $scope.students = result;
          console.log(result);
   });
