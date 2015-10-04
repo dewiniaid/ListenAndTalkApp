@@ -62,6 +62,8 @@ app.factory('mainFactory', function ($http, Restangular, $window){
       });
   }
 
+  // Staff
+
   factory.getAllStaff = function(callback) {
     Restangular.all('/api/v1/teachers/').getList()
       .then(function(result){
@@ -78,6 +80,37 @@ app.factory('mainFactory', function ($http, Restangular, $window){
 
   factory.removeStaff = function(staffid, callback) {
     Restangular.all('/api/v1/teachers/' + staffid).remove()
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  // Category
+  factory.getAllCategory = function(callback) {
+    Restangular.all('/api/v1/categories/').getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  // Location
+  factory.getAllLocation = function(callback) {
+    Restangular.all('/api/v1/locations/').getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  //
+  factory.getAllActivity = function(callback) {
+    Restangular.all('/api/v1/detailactivity/').getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  factory.addActivity = function(newActivity, callback) {
+    Restangular.all('/api/v1/activity/').post(newActivity)
       .then(function(result){
         callback(result);
       });
@@ -104,6 +137,13 @@ app.factory('mainFactory', function ($http, Restangular, $window){
       callback(result);
     });
   };
+
+  factory.getActivityById = function(id, callback) {
+    Restangular.all('/api/v1/activity/'+ id).getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
 
 
   return factory;

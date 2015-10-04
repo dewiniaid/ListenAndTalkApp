@@ -1,0 +1,8 @@
+<div class="list-group" ng-repeat="sidenav in sidenavList">
+
+    <a class="list-group-item text-center" ng-class="{active: isActive(sidenav)}" data_state="{{sidenav.data_state}}" ng-click="changeState(sidenav)">
+      <span class="{{sidenav.data_icon}}"></span>
+      <span ng-bind="sidenav.name"></span>
+    </a>
+
+</div>

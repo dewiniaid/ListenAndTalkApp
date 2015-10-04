@@ -2,6 +2,8 @@ var students = require("../controllers/students.js");
 var teachers = require("../controllers/teachers.js");
 var activity = require("../controllers/activity.js");
 var status = require("../controllers/status.js");
+var category = require("../controllers/categories.js");
+var location = require("../controllers/locations.js");
 
 module.exports = function(app) {
 
@@ -57,11 +59,20 @@ module.exports = function(app) {
   // Activity API
   // ===================
   app.get('/api/v1/activity', function(req, res){
-    activity.getAllActivity(req, res)
-  })
+    activity.getAllActivity(req, res);
+  });
 
+  app.get('/api/v1/activity/:id', function(req, res){
+    activity.getActivityById(req, res);
+  });
 
+  app.get('/api/v1/detailactivity', function(req, res){
+    activity.getAllDetailActivity(req, res);
+  });
 
+  app.post('/api/v1/activity', function(req, res){
+    activity.addActivity(req, res);
+  });
 
   // ===================
   // Status API
@@ -92,4 +103,17 @@ module.exports = function(app) {
     teachers.removeTeacher(req, res);
   });
 
+  // ===================
+  // Category API
+  // ===================
+  app.get('/api/v1/categories/', function(req, res){
+    category.getAllCategories(req, res);
+  });
+
+  // ===================
+  // Location API
+  // ===================
+  app.get('/api/v1/locations/', function(req, res){
+    location.getAllLocations(req, res);
+  });
 }

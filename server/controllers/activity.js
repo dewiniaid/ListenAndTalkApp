@@ -9,8 +9,29 @@ module.exports = (function(){
         });
       },
 
-      getActivityById : function(req, res){
-        var query = db.getActivityByIdQuery(id);
+      getActivityById : function(req, res) {
+        var query = db.getActivityByIdQuery(req.params.id);
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
+
+      getAllDetailActivity : function(req, res) {
+        var query = db.getAllDetailActivityQuery();
+        db.query(query, function(result){
+          res.status(200).json(result);
+        });
+      },
+      addActivity : function(req, res){
+        var query = db.addActivityQuery(
+          req.body.name,
+          req.body.staff_id,
+          req.body.category_id,
+          req.body.location_id,
+          req.body.allow_dropins,
+          req.body.start_date,
+          req.body.end_date
+        );
         db.query(query, function(result){
           res.status(200).json(result);
         });

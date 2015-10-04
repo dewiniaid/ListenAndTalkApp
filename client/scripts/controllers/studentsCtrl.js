@@ -1,9 +1,9 @@
 var app = angular.module('app');
 
 app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
-  mainFactory.getAllStudents(function(result) {
-    $scope.students = result;
-  });
+  // mainFactory.getAllStudents(function(result) {
+  //   $scope.students = result;
+  // });
 
   mainFactory.getAllActivities(function(result) {
   	$scope.activities = result;
@@ -17,9 +17,12 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
   	date = new Date(filter["date"]).toISOString().slice(0,10);
   	mainFactory.searchByActivityAndDate(filter["activityId"], date, function(result) {
       $scope.students = result;
-      console.log(result);
+	  mainFactory.getActivityById(filter["activityId"], function(result) {
+	  	$scope.activityName = result[0]["name"]
+	  })
     });
   }
+
 
   $scope.addNewStudent = function() {
     mainFactory.addNewStudent($scope.newstudent, function(result) {

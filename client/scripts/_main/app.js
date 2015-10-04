@@ -29,6 +29,42 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     },
     data: { requiresLogin: true }
   })
+  .state('activity',{
+    url: '/activity',
+    views: {
+      "nav_top": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'activityCtrl',
+        templateUrl: "partials/activity.html"
+      }
+    },
+    data: { requiresLogin: true }
+  })
+  .state('activity.add',{
+    views: {
+      "nav_side": {
+        templateUrl: "partials/activity.sidenav.html"
+      },
+      "content": {
+        templateUrl: "partials/activity.add.html"
+      }
+    },
+    data: { requiresLogin: true }
+  })
+  .state('activity.view',{
+    views: {
+      "nav_side": {
+        templateUrl: "partials/activity.sidenav.html"
+      },
+      "content": {
+        templateUrl: "partials/activity.view.html"
+      }
+    },
+    data: { requiresLogin: true }
+  })
   .state('newstudent', {
     url: '/newstudent',
     views: {

@@ -1,0 +1,23 @@
+<h2>View Activity</h2>
+<table class="table table-striped">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Staff</th>
+    <th>Category</th>
+    <th>Location</th>
+    <th>Allow Dropins</th>
+    <th>Start Date</th>
+    <th>End Date</th>
+  </tr>
+  <tr ng-repeat="activity in activities">
+    <td>{{activity.activity_id}}</td>
+    <td>{{activity.activity_name}}</td>
+    <td>{{activity.staff_name}}</td>
+    <td>{{activity.category_name}}</td>
+    <td>{{activity.location_name}}</td>
+    <td>{{activity.allow_dropins}}</td>
+    <td>{{activity.start_date}}</td>
+    <td>{{activity.end_date}}</td>
+  </tr>
+</table>
