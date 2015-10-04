@@ -32,17 +32,52 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   };
-    
+
   factory.getActivityByTeacherEmail = function(email, callback) {
     Restangular.all('api/v1/teachers/' + email + '/activity').getList()
       .then(function(result){
         callback(result);
       });
-  };  
+  };
 
 
   factory.searchByActivityAndDate = function(activityId, date, callback) {
     Restangular.all('/api/v1/students/activity').getList({"activityId": activityId, "date": date})
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  factory.addNewStudent = function(newstudent, callback) {
+    Restangular.all('/api/v1/students/').post(newstudent)
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  factory.removeStudent = function(studentid, callback) {
+    Restangular.all('/api/v1/students/' + studentid).remove()
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  factory.getAllStaff = function(callback) {
+    Restangular.all('/api/v1/teachers/').getList()
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  factory.addNewStaff = function(newstaff, callback) {
+    Restangular.all('/api/v1/teachers/').post(newstaff)
+      .then(function(result){
+        callback(result);
+      });
+  }
+
+  factory.removeStaff = function(staffid, callback) {
+    Restangular.all('/api/v1/teachers/' + staffid).remove()
       .then(function(result){
         callback(result);
       });
@@ -55,7 +90,7 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   }
-  
+
 
   factory.checkIn = function(activity_id, studentsToCheckIn, date, callback) {
     var students = {"data": []};

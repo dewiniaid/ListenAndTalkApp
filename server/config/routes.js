@@ -29,6 +29,11 @@ module.exports = function(app) {
     students.getStudentById(req, res);
   });
 
+  //Remove Student by studentID
+  app.delete('/api/v1/students/:id', function(req, res){
+    students.removeStudent(req, res);
+  });
+
   //Add new student
   app.post('/api/v1/students', function(req, res){
     students.addNewStudent(req, res);
@@ -82,6 +87,9 @@ module.exports = function(app) {
   });
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
+  });
+  app.delete('/api/v1/teachers/:id', function(req, res){
+    teachers.removeTeacher(req, res);
   });
 
 }

@@ -21,6 +21,20 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
     });
   }
 
+  $scope.addNewStudent = function() {
+    mainFactory.addNewStudent($scope.newstudent, function(result) {
+      console.log(result);
+      $window.location.reload();
+    });
+  }
+
+  $scope.removeStudent = function(studentid) {
+    mainFactory.removeStudent(studentid, function(result) {
+      console.log(result);
+      $window.location.reload();
+    });
+  }
+
   $scope.searchHistoryByStudentAndDate = function(filter) {
   	date = new Date(filter["date"]).toISOString().slice(0,10);
   	mainFactory.searchHistoryByStudentAndDate(filter["studentId"], date, function(result) {
@@ -28,14 +42,14 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
       console.log(result);
     });
   }
-  
+
   var studentsToCheckIn = {};
   $scope.checkin = function(status, studentID) {
 	if (studentsToCheckIn[studentID]) {
 		studentsToCheckIn[studentID]["status"] = status;
 	} else {
 		studentsToCheckIn[studentID] = {"status": status};
-	}	
+	}
   }
 
   $scope.addComment = function(comment, studentID) {
@@ -55,11 +69,11 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
 
 	  if(dd<10) {
 	    dd= '0' + dd;
-	  } 
+	  }
 
 	  if(mm<10) {
 	    mm = '0' + mm;
-	  } 
+	  }
 
 	  today = yyyy + '-' + mm + '-' + dd;
 	  return today;

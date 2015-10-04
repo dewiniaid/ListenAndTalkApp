@@ -1,0 +1,33 @@
+<div class="container-fluid">
+  <h1>Add New Student</h1>
+  <form class="form-inline" method="post" ng-submit="addNewStudent()">
+    <div class="form-group">
+      <label for="firstName">First Name</label>
+      <input type="text" class="form-control" id="firstName" ng-model="newstudent.firstName" required>
+    </div>
+    <div class="form-group">
+      <label for="lastName">Last Name</label>
+      <input type="text" class="form-control" id="lastName" ng-model="newstudent.lastName" required>
+    </div>
+    <input type="submit" class="btn btn-default" value="Add Student">
+  </form>
+
+  <table class="table table-striped">
+    <tr>
+      <th>ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Action</th>
+    </tr>
+    <tr ng-repeat="student in students | orderBy:'-id'">
+      <td>{{student.id}}</td>
+      <td>{{student.name_first}}</td>
+      <td>{{student.name_last}}</td>
+      <td>
+        <form ng-submit="removeStudent(student.id)" method="post">
+          <input type="submit" class="btn btn-default" value="Delete">
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>
