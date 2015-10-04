@@ -56,6 +56,11 @@ module.exports = function(app) {
   });
   app.get('/api/v1/teachers/:id', function(req, res){
     teachers.getTeacherById(req, res);
+  app.put('/api/v1/teachers/:id', function(req, res){
+    teachers.updateTeacherInfo(req, res);
+  });
+  app.post('/api/v1/teachers', function(req, res){
+    teachers.addNewTeacher(req, res);
   });
 
 };
