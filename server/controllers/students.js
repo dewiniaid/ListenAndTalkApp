@@ -25,17 +25,17 @@ module.exports = (function(){
       },
 
       getAllStudentsByActivityAndDate : function(req, res){
-        var activityId = req.params('activityId');
-        var date = req.params('date');
-        var query = db.getAllStudentsByActivityAndDateQuery(activityId, date);        
+        var activityId = req.params.activityId;
+        var date = req.params.date;
+        var query = db.getAllStudentsByActivityAndDateQuery(activityId, date);
         db.query(query, function(result){
           res.status(200).json(result);
         });
       },
 
       addNewStudent : function(req, res){
-        var firstName = res.params('firstName');
-        var lastName = res.params.('lastName');
+        var firstName = res.params.firstName;
+        var lastName = res.params.lastName;
         var query = db.addNewStudentQuery(firstName, lastName);
         db.query(query, function(result){
           res.status(200).json(result);

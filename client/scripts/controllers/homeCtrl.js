@@ -4,10 +4,6 @@ app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $
   $scope.auth = auth;
   
 
-  mainFactory.test(function(result) {
-    $scope.test = result;
-  });
-
   $scope.logout = function() {
     auth.signout();
     store.remove('profile');
@@ -15,9 +11,9 @@ app.controller('homeCtrl', function($scope, mainFactory, auth, store, $window, $
     $window.location.reload();
   }
 
-  $scope.post = function() {
-    mainFactory.test_post($scope.postData, function(result) {
-      console.log(result);
-    });
-  }
+  // $scope.post = function() {
+  //   mainFactory.test_post($scope.postData, function(result) {
+  //     console.log(result);
+  //   });
+  // }
 });
