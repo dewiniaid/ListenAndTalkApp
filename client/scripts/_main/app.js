@@ -52,6 +52,42 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
       }
     }
   })
+  .state('markAttendance', {
+    url: '/markAttendance',
+    views: {
+      "nav_top": {
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/markAttendance.html"
+      }
+    }
+  })
+  .state('viewAttendance', {
+    url: '/viewAttendance',
+    views: {
+      "nav_top": {
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/viewAttendance.html"
+      }
+    }
+  })
+  .state('settings', {
+    url: '/settings',
+    views: {
+      "nav_top": {
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/settings.html"
+      }
+    }
+  })
   .state('login', {
     url: '/login',
     views: {
