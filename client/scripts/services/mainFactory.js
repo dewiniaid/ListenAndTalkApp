@@ -75,6 +75,13 @@ app.factory('mainFactory', function ($http, Restangular, $window){
         callback(result);
       });
   }
+	//dectivateTeacherQuery
+	factory.dectivateTeacherQuery = function(id, deactivate) {
+		Restangular.all('/api/v1/teachers/').post(id, deactivate)
+			.then(function(result){
+			callback(result);
+		});
+	}	
 
   factory.removeStaff = function(staffid, callback) {
     Restangular.all('/api/v1/teachers/' + staffid).remove()

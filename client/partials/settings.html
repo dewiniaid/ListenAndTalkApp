@@ -4,7 +4,7 @@
       <div class="panel-body">
 
         <h1>Settings</h1>
-				<h1>Mark status</h1>
+				<h1>Manage Users</h1>
 				<table class="table table-striped setting-table">
 					<tr>
 						<th>ID</th>
@@ -19,7 +19,7 @@
 						<td>
 							<form>
 								<label class="radio-inline">
-									<input type="radio" ng-model="status" value="deactivate" ng-click="deactivate(status, student.id)"> deactivate
+									<input type="radio" ng-model="status" value="deactivate" ng-checked="deactivate(status, student.id)"> deactivate
 								</label>
 							</form>
 						</td>
