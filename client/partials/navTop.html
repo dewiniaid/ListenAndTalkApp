@@ -1,3 +1,4 @@
+
 <nav class="navbar navbar-default" ng-controller="navCtrl" ng-init="init()">
   <div class="container-fluid">
     <div class="navbar-header">
@@ -10,9 +11,9 @@
         </li>
       </ul>
       <ul class="nav navbar-nav pull-right">
-        <li><a href="#/userinfo"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+        <li><a href="#/userinfo"><span class="glyphicon glyphicon-user"></span> Welcome {{ auth.profile.given_name }} {{ auth.profile.family_name }}</a></li>
         <li><a href="#" ng-click="logout()"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
       </ul>
     </div>
   </div>
-</nav>
+</nav>{{ auth.profile.given_name }} {{ auth.profile.family_name }}
