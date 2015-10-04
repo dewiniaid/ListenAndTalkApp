@@ -26,18 +26,17 @@
             <td>{{student.name_first}}</td>
             <td>{{student.name_last}}</td>
             <td>
-                <!-- <form> -->
+                <form>
                     <label class="radio-inline">
-                    <input type="radio" ng-model="status" value="present" ng-change="checkin(status)"> Present
+                    <input type="radio" ng-model="status" value="present" ng-change="checkin(status, student.id)"> Present
                     </label>
                     <label class="radio-inline">
-                    <input type="radio" ng-model="status" value="absent" ng-change="checkin(status)"> Absent
+                    <input type="radio" ng-model="status" value="absent" ng-change="checkin(status, student.id)"> Absent
                     </label>
                     <label class="radio-inline">
-                    <input type="radio" ng-model="status" value="excused" ng-change="checkin(status)"> Excused
+                    <input type="radio" ng-model="status" value="excused" ng-change="checkin(status, student.id)"> Excused
                     </label>
-                <!-- </form> -->
-                {{ status }}
+                </form>
             </td>
             <td>
                 <form>

@@ -1,7 +1,6 @@
 var app = angular.module('app');
 
 app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
-
   mainFactory.getAllStudents(function(result) {
     $scope.students = result;
   });
@@ -9,11 +8,17 @@ app.controller('studentsCtrl', function($scope, mainFactory, $window, $state) {
   mainFactory.getAllActivities(function(result) {
   	$scope.activities = result;
   });
-  
-  $scope.checkin = function(status) {
-	console.log(status);
-	mainFactory.checkIn(function() {
-		console.log('test');
-	})
+
+
+  var studentsToCheckIn = {};
+  $scope.checkin = function(status, studentID) {
+	// studentsToCheckIn.push({"status": status, "studentID": studentID})
+	studentsToCheckIn[studentID] = status;
+	console.log(studentsToCheckIn);
+	if (Object.keys(studentsToCheckIn).length == $scope.students.length) {
+		mainFactory.checkIn(function() {
+			console.log('test');
+		})
+	};
   }
 });
