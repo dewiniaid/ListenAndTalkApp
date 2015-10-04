@@ -1,0 +1,14 @@
+<nav class="navbar navbar-default" ng-controller="navCtrl" ng-init="init()">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" ng-click="select(this)" href="#/">Home</a>
+    </div>
+    <div>
+      <ul class="nav navbar-nav">
+        <li ng-repeat="nav in navList" ng-class="{active: isActive(nav)}">
+          <a href="{{nav.href}}" ng-click="select(nav)" ng-bind="nav.name"></a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -3,9 +3,19 @@ var students = require("../server/controllers/students.js");
 var teachers = require("../server/controllers/teachers.js");
 
 module.exports = function(app) {
+  // GET /api/test
   app.get('/api/test', function(req, res) {
     test.test(req, res);
   });
+  // GET api/test_params/1
+  app.get('/api/test_params/:id', function(req, res) {
+    test.test_params(req, res);
+  });
+  // POST api/test_post
+  app.post('/api/test_post', function(req, res) {
+    test.test_post(req, res);
+  });
+
   app.get('/api/v1/students', function(req, res){
     students.getAllStudents(req, res);
   });
