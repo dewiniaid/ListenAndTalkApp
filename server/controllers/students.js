@@ -40,7 +40,6 @@ module.exports = (function(){
         db.query(query, function(result){
           res.status(200).json(result);
         });
-      },
-
+      }
     }
 })();

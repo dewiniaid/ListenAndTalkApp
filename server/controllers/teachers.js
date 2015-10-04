@@ -28,5 +28,8 @@ module.exports = (function(){
       addNewTeacher : function(req, res){
         res.status(200).send("Teacher are added on this endpoint");
       }
+      getRosterByTeacher : function(req, res){
+        res.status(200).send("getRosterByTeacher");
+      }
     }
 })();
