@@ -301,6 +301,5 @@ module.exports = function() {
           name: 'teacherEmail'
       };
     }
-
   };
 };
