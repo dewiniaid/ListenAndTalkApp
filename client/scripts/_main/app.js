@@ -33,6 +33,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     url: '/test',
     views: {
       "nav_top": {
+        controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
@@ -45,6 +46,7 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
     url: '/about',
     views: {
       "nav_top": {
+        controller: 'homeCtrl',
         templateUrl: "partials/navTop.html"
       },
       "main": {
@@ -62,12 +64,19 @@ app.config(function($stateProvider, $urlRouterProvider, authProvider, $httpProvi
       }
     }
   })
-  // .state('userInfo', {
-  //   url: '/userInfo',
-  //   templateUrl: 'partials/userInfo.html',
-  //   controller: 'userInfoCtrl',
-  //   requiresLogin: true
-  // })
+  .state('userinfo', {
+    url: '/userinfo',
+    views: {
+      "nav_top": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/navTop.html"
+      },
+      "main": {
+        controller: 'homeCtrl',
+        templateUrl: "partials/userinfo.html"
+      }
+    }
+  })
 
   $urlRouterProvider.otherwise('/');
 

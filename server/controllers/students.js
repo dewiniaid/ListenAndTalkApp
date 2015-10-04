@@ -1,5 +1,3 @@
-var db = require('../config/database_interface.js')();
-
 module.exports = (function(){
     return {
       getAllStudents : function(req, res){

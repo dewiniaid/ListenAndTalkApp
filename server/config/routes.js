@@ -16,6 +16,9 @@ module.exports = function(app) {
     test.test_post(req, res);
   });
 
+  // ===================
+  // Student API
+  // ===================
   app.get('/api/v1/students', function(req, res){
     students.getAllStudents(req, res);
   });
@@ -31,8 +34,15 @@ module.exports = function(app) {
   app.get('/api/v1/students/:id/activities', function(req, res){
     students.getStudentsActivities(req, res);
   });
+
+  // ===================
+  // Teacher API
+  // ===================
+  app.get('/api/v1/teachers/:email', function(req, res){
+    teachers.getTeacherByEmail(req, res);
+  });
   app.get('/api/v1/teachers/:id', function(req, res){
-    teachers.getTeacherInfo(req, res);
+    teachers.getTeacherById(req, res);
   });
   app.put('/api/v1/teachers/:id', function(req, res){
     teachers.updateTeacherInfo(req, res);
@@ -40,4 +50,5 @@ module.exports = function(app) {
   app.post('/api/v1/teachers', function(req, res){
     teachers.addNewTeacher(req, res);
   });
+  
 };
