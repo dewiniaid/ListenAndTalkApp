@@ -1,0 +1,1 @@
+Contains support and setup files for the database; mainly SQL script(s)
