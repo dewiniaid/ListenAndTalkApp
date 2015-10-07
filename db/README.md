@@ -1,2 +1,1 @@
-# listenandtalk
-Listen and Talk Hackathon Project
+Contains support and setup files for the database; mainly SQL script(s)
