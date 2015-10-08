@@ -1,5 +1,5 @@
-Insert into staff (name_first, name_last,email)
-values ('Kevin', 'OBrien', 'kevin.obrien@praece.com')
+INSERT INTO staff (name_first, name_last,email)
+VALUES ('Kevin', 'OBrien', 'kevin.obrien@praece.com');
 
 INSERT INTO attendance_status (name)
 VALUES
