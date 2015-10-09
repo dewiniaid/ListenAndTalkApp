@@ -1,4 +1,18 @@
+# Old .gitignore contents
 node_modules/
 vendor/
 .DS_Store
 
+# Ignore the server-venv directory (work dir for virtualenv)
+server-venv/
+
+# Don't allow the config file with database passwords to hit the repository
+server/latci/config.py
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE crud
+.idea/*
