@@ -3,6 +3,7 @@
 CREATE SCHEMA listenandtalk;
 SET search_path=listenandtalk,public;
 
+
 CREATE TABLE student (
 	id SERIAL NOT NULL,
 	name_first VARCHAR NOT NULL,
@@ -24,13 +25,33 @@ CREATE TABLE staff (
 	date_created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
 	can_login BOOLEAN NOT NULL DEFAULT TRUE,	-- Don't allow teachers without this to login
-	email VARCHAR NULL, 	
+	email VARCHAR NULL,
 	-- Teacher email address for OAuth login.
 	-- TODO: Accounts, which might potentially need to be its own table.
 	-- If using OAuth, this may just be an email address
-	PRIMARY KEY(id)
+	PRIMARY KEY(id),
+	UNIQUE(email)
 );
 CREATE INDEX ON staff(name_first, name_last);
+CREATE INDEX ON staff(email);
+
+
+CREATE TABLE staff_session (
+    id BYTEA NOT NULL,
+    staff_id INT NOT NULL,
+
+    created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    visited TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    origin_ip INET NOT NULL,
+    last_ip INET NOT NULL,
+
+    PRIMARY KEY(id),
+    FOREIGN KEY(staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+COMMENT ON TABLE staff_session IS 'Used by the backend to track staff sessions (e.g. logins)';
+CREATE INDEX ON staff_session(created);
+CREATE INDEX ON staff_session(visited);
 
 
 
