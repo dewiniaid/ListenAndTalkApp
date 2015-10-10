@@ -37,7 +37,7 @@ CREATE INDEX ON staff(email);
 
 
 CREATE TABLE staff_session (
-    id BYTEA NOT NULL,
+    id VARCHAR NOT NULL,
     staff_id INT NOT NULL,
 
     created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

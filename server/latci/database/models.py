@@ -14,7 +14,12 @@ from sqlalchemy.dialects.postgresql import INET  # IP Addresses (non-standard ty
 # ORM
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
+
 import re
+import datetime
+
+from latci import config
 
 
 class _Model():
@@ -32,6 +37,14 @@ class _Model():
         :return: Table name for SQL
         """
         return (cls.__name__[0] + re.sub("([A-Z])", "_\\1", cls.__name__[1:])).lower()
+
+    def __json__(self):
+        """Native support for JSON encoding database objects"""
+        return {
+            c.name: getattr(self, c.name) for c in self.__table__.columns
+        }
+
+
 Model = declarative_base(cls=_Model)
 
 
@@ -143,7 +156,7 @@ class AttendanceUpsert(Model):
 
 class StaffSession(Model):
     """Tracks sessions"""
-    id = Column(Binary, primary_key=True, nullable=False)
+    id = Column(Text, primary_key=True, nullable=False)
     staff_id = Column(Integer, ForeignKey('staff.id'), nullable=False)
 
     created = Column(DateTime(timezone=True), nullable=False, default=sql.func.now())
@@ -151,6 +164,47 @@ class StaffSession(Model):
 
     origin_ip = Column(INET, nullable=False)
     last_ip = Column(INET, nullable=False)
+
+    staff = relationship('Staff', lazy='joined')
+
+    # Helper properties for determining expiration time
+    @hybrid_property
+    def expires(self):
+        expires = self.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME)
+        if config.AUTH_SESSION_MAXLIFETIME:
+            expires = min(expires, self.created + datetime.timedelta(seconds=config.AUTH_SESSION_MAXLIFETIME))
+        return expires
+
+    @expires.expression
+    def expires(cls):
+        if config.AUTH_SESSION_MAXLIFETIME:
+            return sql.func.least(
+                cls.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME),
+                cls.created + datetime.timedelta(seconds=config.AUTH_SESSION_MAXLIFETIME)
+            )
+        return cls.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME)
+
+    # Helper properties for determining whether an object is expired
+    # Note: at the SQL level, is_expired is more efficient than comparing expires as it should allow indexes to
+    # be used more optimally.
+    @hybrid_property
+    def is_expired(self):
+        return self.expires < datetime.datetime.now()
+
+    @is_expired.expression
+    def is_expired(cls):
+        now = sql.func.now
+        seconds = lambda x: datetime.timedelta(seconds=x)
+        cond = cls.visited < (now - seconds(config.AUTH_SESSION_LIFETIME))
+        if config.AUTH_SESSION_MAXLIFETIME:
+            cond |= (cls.created < (now - seconds(config.AUTH_SESSION_MAXLIFETIME)))
+        return cond
+
+
+
+
+
+
 
 
 

@@ -62,6 +62,10 @@ try:
 except Exception as e:
     raise e
 
+from latci.json import dumps
+print(dumps(staff))
+
+
 import code
 code.InteractiveConsole(locals=globals()).interact()
 

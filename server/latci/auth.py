@@ -31,6 +31,7 @@ import time
 from sqlalchemy import orm, exc
 from latci import config
 from latci.database import models, Session
+import random
 
 import bottle
 import functools
@@ -39,13 +40,6 @@ import collections.abc
 import os
 
 import base64
-
-# Encode/decode session IDs
-# encode_session_id takes one bytes argument as input and returns a safe string representation of it.
-# decode_session_id takes one string argument as input and returns the original binary representation.
-# decode_session_id(encode_session_id(orig)) == orig.
-encode_session_id = base64.b85encode
-decode_session_id = base64.b85decode
 
 def client_address(req = None):
     """
@@ -63,35 +57,158 @@ def client_address(req = None):
     return ips[0]
 
 
-class AuthenticationResult():
+class AuthSession():
     """
-    Stores the result of any authentication attempts
+    Handles authentication
 
-    :ivar is_valid: True if the authentication result is valid (results in a succcesful non-guest login)
-    :ivar is_guest: True if the authentication result is to treat this user as unauthenticated, but not as a failure
+    :ivar is_valid: True if this session corresponds to a valid non-guest login.
+    :ivar is_guest: True if this session corresponds to a valid guest login.
         This is true if none of the authentication parameters are present, or if the only parameters present
         correspond to a silent failure (e.g. expired session_id)
-    :ivar staff: The referenced staff account, if known
-    :ivar email: Referenced email address, if known
-    :ivar expires: When the login expires.
-    :ivar session_id: Session ID to maintain this session.  None if not present/invalid.
-    :ivar id_token: ID token used to create this session.  None if not present/invalid
-    :ivar error: Error message on failed auth.
+    :ivar session: Session attached to this result.
+    :ivar error: Description of authentication error, if any.
     """
 
-    def __init__(self):
+    cookie_params = {'name': 'session_id'}
+
+    def __init__(self, session=None, token=None, session_id=None, db=None):
+        """
+        Creates a new AuthSession based on provided fields.
+
+        Only one of (token, session_id, session) will be examined, based on the first non-None argument in that order.
+
+        :param session: An existing StaffSession, or None
+        :param token: An id_token from Google Signin, or None
+        :param session_id: A session ID, or none
+        :param db: A database session, or None to None.
+        :return:
+        """
         self.is_valid = False
         self.is_guest = False
-        self.staff = None
-        self.email = None
-        self.expires = None
-        self.session_id = None
-        self.id_token = None
-        self.reason = None
-        pass
+        #self.expires = None
+        self.session = None
+        self.error = None
+
+        if db is None:
+            db = Session()
+        self.db = db
+
+        if token is not None:
+            self._parsetoken(token)
+            return
+
+        if session_id is not None:
+            session = db.query(models.StaffSession).get(session_id)
+            if session is None:
+                self.error = 'Session expired.'
+
+        self.session = session
+        if session is not None:
+            if not session.staff.can_login:
+                self.error = "Account disabled."
+            elif session.is_expired:
+                self.error = "Session expired."
+            else:
+                self.is_valid = True
+
+        return
+
+    def _parsetoken(self, token):
+        """Assists in validation of id_tokens from Google Signin"""
+        try:
+            idinfo = oauth2client.client.verify_id_token(token, config.OAUTH2_CLIENT_ID)
+            print(repr(idinfo))
+            if idinfo['aud'] != config.OAUTH2_CLIENT_ID:
+                raise AppIdentityError("Unrecognized client ID.")
+            if idinfo['iss'] not in config.OAUTH2_ISSUERS:
+                raise AppIdentityError("Invalid issuer.")
+            if config.OAUTH2_DOMAINS and idinfo['hd'] not in config.OAUTH2_DOMAINS:
+                raise AppIdentityError("Domain not authorized.")
+            if idinfo.get('exp', 0) < time.time():
+                raise AppIdentityError("Token is expired.")
+            if idinfo.get('email', None) is None:
+                raise AppIdentityError("Email address not available.")
+            self.email = idinfo['email']
+            if not idinfo.get('email_verified', False):
+                raise AppIdentityError("Email address not verified.")
+            if not idinfo.get('email_verified', False):
+                raise AppIdentityError("Email address not verified.")
+        except AppIdentityError as e:
+            self.error = e.args[0]
+            return
+
+        # If we're still here, Google says they're a valid user.  Let's check the database to see if they exist.
+        try:
+            staff = db.query(models.Staff).filter(models.Staff.email == result.email).one()
+        except orm.exc.NoResultFound:
+            staff = None
+            if config.OAUTH2_DEBUG_STAFF_ID:
+                try:
+                    staff = db.query(models.Staff).get(config.OAUTH2_DEBUG_STAFF_ID)
+                except orm.exc.NoResultFound:
+                    staff = None
+            if staff is None:
+                self.error = 'Account not registered.'
+                return result
+        except orm.exc.MultipleResultsFound:
+            raise Exception("Unexpected error (multiple accounts found)")
+
+        if not staff.can_login:
+            self.error = "Account disabled."
+            return
+
+        # Create a session
+        self.session = create_session(staff)
+        #self.expires = self.session.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME)
+        #if config.AUTH_SESSION_MAXLIFETIME:
+        #    self.expires = min(
+        #        self.expires,
+        #        self.session.created + datetime.timedelta(seconds=config.AUTH_SESSION_MAXLIFETIME)
+        #    )
+        self.is_valid = True
+        return
+
+    def set_cookie(self, response=None):
+        if self.is_valid and self.session:
+            response = bottle.response
+
+        if self.session is None or not self.is_valid:
+            return response.set_cookie(
+                value='',
+                max_age=-1, **self.cookie_params)
+        return response.set_cookie(
+            value=self.session.id,
+            max_age=config.AUTH_COOKIE_LIFETIME, **self.cookie_params
+        )
+
+    @classmethod
+    def create_from_request(cls, request=None, db=None):
+        if request is None:
+            request = bottle.request
+
+        if isinstance(request.json, collections.Mapping) and isinstance(request.json.get('auth'), collections.Mapping):
+            token = request.json['auth'].get('id_token')
+            session_id = request.json['auth'].get('session_id')
+
+            if token:
+                return cls(token=token, db=db)
+            elif session_id:
+                return cls(session_id=session_id, db=db)
+
+        session_id = request.cookies.get(self.cookie_params['name'])
+        if session_id is not None:
+            return cls(session_id=session_id, db=db)
 
 
 def create_session(staff, ip=None, db=None):
+    """
+    Creates a new StaffSession attached to the referenced staff person and returns it.
+
+    :param staff: Staff to attach
+    :param ip: IP address of creator.  Optional.
+    :param db: Database handle.  Optional.
+    :return: The new session.
+    """
     if db is None:
         db = Session()
 
@@ -103,7 +220,8 @@ def create_session(staff, ip=None, db=None):
         # but just in case of the unlikely case of a hash collision, it loops
         try:
             db.rollback()
-            id = os.urandom(config.AUTH_SESSION_KEYLEN)
+            id = str(base64.b85encode(os.urandom(config.AUTH_SESSION_KEYLEN)))
+            print(repr(ip))
             session = models.StaffSession(
                 id=id,
                 staff_id=staff.id,
@@ -120,58 +238,74 @@ def create_session(staff, ip=None, db=None):
                 continue  # Try again on next pass of the loop
             else:
                 raise
-
         return db.query(models.StaffSession).filter(models.StaffSession.id == id).one()
 
 
-def check_token(token, db=None):
+def visit_session(session, ip=None, db=None):
+    """
+    'visits' a session -- updates last_ip and visited
+
+    :param session: A StaffSession
+    :param ip:
+    :param db:
+    :return: Updated session
+    """
+    if db is None:
+        db = Session()
+    if ip is None:
+        ip = client_address()
+
+    session.last_ip = ip
+    session.visited = sql.func.now()
+    db.rollback()
+    db.add(session)
+    db.commit()
+
+    return db.query(models.StaffSession).filter(models.StaffSession.id == session.id).one()
+
+
+def cleanup_sessions(db=None):
+    """
+    Cleans up expired sessions.
+
+    :param db: Handle to db (optional)
+    """
     if db is None:
         db = Session()
 
-    result = AuthenticationResult()
-    result.token = token
-    # Sample code from https://developers.google.com/identity/sign-in/web/backend-auth, altered to our project
-    try:
-        idinfo = oauth2client.client.verify_id_token(token, config.OAUTH2_CLIENT_ID)
-        print(repr(idinfo))
-        if idinfo['aud'] != config.OAUTH2_CLIENT_ID:
-            raise AppIdentityError("Unrecognized client ID.")
-        if idinfo['iss'] not in config.OAUTH2_ISSUERS:
-            raise AppIdentityError("Invalid issuer.")
-        if config.OAUTH2_DOMAINS and idinfo['hd'] not in config.OAUTH2_DOMAINS:
-            raise AppIdentityError("Domain not authorized.")
-        if idinfo.get('exp', 0) < time.time():
-            raise AppIdentityError("Token is expired.")
-        if idinfo.get('email', None) is None:
-            raise AppIdentityError("Email address not available.")
-        result.email = idinfo['email']
-        if not idinfo.get('email_verified', False):
-            raise AppIdentityError("Email address not verified.")
-        if not idinfo.get('email_verified', False):
-            raise AppIdentityError("Email address not verified.")
-    except AppIdentityError as e:
-        result.reason = e.args[0]
-        return result
+    return db.query(models.StaffSession).filter(models.StaffSession.is_expired).delete()
 
-    # If we're here, Google says they're a valid user.  Let's check the database...
-    try:
-        result.staff = db.query(models.Staff).filter(models.Staff.email == result.email).one()
-    except orm.exc.NoResultFound:
-        result.staff = None
-        if config.OAUTH2_DEBUG_STAFF_ID:
-            try:
-                result.staff = db.query(models.Staff).get(config.OAUTH2_DEBUG_STAFF_ID)
-            except orm.exc.NoResultFound:
-                result.staff = None
-        if result.staff is None:
-            result.reason = 'Account not registered.'
-            return result
-    except orm.exc.MultipleResultsFound:
-        raise Exception("Unexpected error (multiple accounts found)")
 
-    if not result.staff.can_login:
-        result.reason = "Account disabled."
-        return result
+def maybe_cleanup_sessions(db=None):
+    """
+    Cleans up expired sessions based on config.AUTH_CLEANUP_FREQ
+    :param db: Optional db handle
+    :return: None, or the result of cleanup_sessions if cleanup occured.
+    """
+    if random.randint(0, config.AUTH_CLEANUP_FREQ) == 0:
+        return cleanup_sessions(db)
+    return None
 
-    result.is_valid = True
-    return result
+
+def auth_wrapper(required, keyword, attach_json):
+    """
+    Creates a wrapper for callables that service requests.
+
+    :param required: True if valid authentication is required.  The underlying function will not be called if
+        authentication fails
+    :param keyword: Name of a keyword argument containing an AuthSession to pass to the wrapped function
+    :param attach_json: If True and the wrapped function returns something dict-like, attach an auth: key to the dict
+    :return:
+    """
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        db = kwargs.get('db', None)
+        maybe_cleanup_sessions(db)
+        auth = AuthSession.create_from_request(bottle.request, db)
+        if auth.is_valid:
+            auth.set_cookie(bottle.response)
+            visit_session(auth.session)
+
+        if attach_json:
+            pass
+
