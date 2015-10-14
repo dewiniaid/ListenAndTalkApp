@@ -48,23 +48,14 @@ def token_info(db, token):
     if idinfo.get('exp', 0) < time.time():
         raise AppIdentityError("Token is expired.")
 
-ex = None
-try:
-    import sqlalchemy.orm
-    db = latci.database.Session()
-    from latci.database import models
+import sqlalchemy.orm
+db = latci.database.Session()
+from latci.database import models
 
-    staff = db.query(models.Staff).get(1)
+staff = db.query(models.Staff).get(1)
 
-    import latci.auth
-    session = latci.auth.create_session(staff, ip='172.31.0.1', db=None)
-
-except Exception as e:
-    raise e
-
-from latci.json import dumps
-print(dumps(staff))
-
+import latci.auth
+session = latci.auth.create_session(staff, ip='172.31.0.1', db=None)
 
 import code
 code.InteractiveConsole(locals=globals()).interact()

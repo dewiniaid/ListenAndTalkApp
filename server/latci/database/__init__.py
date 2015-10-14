@@ -21,3 +21,4 @@ def set_schema_upon_connection(dbapi_conection, connection_record, connection_pr
     cur.execute("COMMIT")
 
 Session = sqlalchemy.orm.sessionmaker(bind=engine, autocommit=False)
+

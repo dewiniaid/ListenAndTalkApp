@@ -131,15 +131,13 @@ class AuthSession():
             self.email = idinfo['email']
             if not idinfo.get('email_verified', False):
                 raise AppIdentityError("Email address not verified.")
-            if not idinfo.get('email_verified', False):
-                raise AppIdentityError("Email address not verified.")
         except AppIdentityError as e:
             self.error = e.args[0]
             return
 
         # If we're still here, Google says they're a valid user.  Let's check the database to see if they exist.
         try:
-            staff = db.query(models.Staff).filter(models.Staff.email == result.email).one()
+            staff = db.query(models.Staff).filter(models.Staff.email == self.email).one()
         except orm.exc.NoResultFound:
             staff = None
             if config.OAUTH2_DEBUG_STAFF_ID:
@@ -233,7 +231,7 @@ def create_session(staff, ip=None, db=None):
         except exc.IntegrityError as ex:
             db.rollback()
             # This odd exception handling is because it's not possible to tell the actual cause of the IntegrityError
-            # It could also be that the referenced staff person does NOT exist.
+            # It could also be that the referenced staff person does NOT exist
             if 'already exists' in ex.args[0]:
                 continue  # Try again on next pass of the loop
             else:

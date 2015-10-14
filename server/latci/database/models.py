@@ -5,27 +5,40 @@ NOTE: The schema here is not fully representative of the actual database.
 
 Notably, stored procedures, triggers, indexes and foreign key constraints are not fully represented.
 """
-from sqlalchemy import Column, ForeignKey, sql, orm
+from sqlalchemy import Column, ForeignKey, sql
 
 # SQL Types
 from sqlalchemy.types import *
 from sqlalchemy.dialects.postgresql import INET  # IP Addresses (non-standard type)
 
 # ORM
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.orm import relationship, backref, mapper
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
+import sqlalchemy.event
 
 import re
 import datetime
-
 from latci import config
+import latci.schema
 
 
-class _Model():
+@as_declarative()
+class Model():
     """
     Base class for all ORM Objects (which correspond to tables in the database.
     """
+
+    def __init__(self, *args, **kwargs):
+        self._schema = None
+
+    # Allow lazy evalaution of schema internal property.
+    @property
+    def schema(self):
+        if self._schema is None:
+            self._schema = self.Schema(instance=self)
+        return self._schema
+
     @declared_attr
     def __tablename__(cls):
         """
@@ -39,13 +52,14 @@ class _Model():
         return (cls.__name__[0] + re.sub("([A-Z])", "_\\1", cls.__name__[1:])).lower()
 
     def __json__(self):
-        """Native support for JSON encoding database objects"""
+        """Native support for JSON encoding database objects, v1"""
         return {
             c.name: getattr(self, c.name) for c in self.__table__.columns
         }
 
-
-Model = declarative_base(cls=_Model)
+    @classmethod
+    def generate(cls, json):
+        return cls.SchemaClass().make_instance(json)
 
 
 class LookupTable():
@@ -201,11 +215,35 @@ class StaffSession(Model):
         return cond
 
 
+# Automatically generate Marshmallow schemas from ORM Models.  Adapted from
+# https://marshmallow-sqlalchemy.readthedocs.org/en/latest/recipes.html#automatically-generating-schemas-for-sqlalchemy-models
+# and heavily modified.
+@sqlalchemy.event.listens_for(mapper, 'after_configured')
+def setup_schema():
+    for class_ in Model._decl_class_registry.values():
+        if not hasattr(class_, '__tablename__'):
+            continue  # Skip abstract classes that don't have an underlying table.
 
+        if hasattr(class_, 'SchemaClass'):
+            continue
 
+        # if class_.__name__.endswith('Schema'):
+        #     raise ModelConversionError(
+        #         "For safety, setup_schema can not be used when a Model class ends with 'Schema'"
+        #     )
 
+        # Determine schema metaclass
+        meta_base = getattr(class_, 'Meta', object)
+        if meta_base is not object and hasattr(meta_base, 'model'):
+            Meta = meta_base
+        else:
+            class Meta(meta_base):
+                model = class_
 
-
-
-
-
+        schema_class = type(
+            "{}Schema".format(class_.__name__),  # Name of new class
+            (latci.schema.Schema,),  # Subclasses
+            {'Meta': Meta}  # Members
+        )
+        setattr(class_, 'SchemaClass', schema_class)
+        print(repr(class_))
