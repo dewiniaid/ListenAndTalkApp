@@ -29,8 +29,8 @@ app.install(bottle.JSONPlugin(json_dumps=latci.json.dumps))
 
 @route('/static/<path:path>')
 def serve_static_files(path):
-    print("Whee")
     return bottle.static_file(path, root='D:/git/listenandtalk/static/')
+
 
 @route('/dbtest')
 def dbtest(db):
@@ -55,16 +55,8 @@ def token_info(db, token):
     if idinfo.get('exp', 0) < time.time():
         raise AppIdentityError("Token is expired.")
 
-import sqlalchemy.orm
-db = latci.database.Session()
-from latci.database import models
 
-staff = db.query(models.Staff).get(1)
+# Required for proper initialization of routes
+import latci.views
 
-import latci.auth
-session = latci.auth.create_session(staff, ip='172.31.0.1', db=None)
-
-import code
-code.InteractiveConsole(locals=globals()).interact()
-
-bottle.run(host='localhost', port=8000, debug=True)
+bottle.run(host='0.0.0.0', port=8000, debug=True)
