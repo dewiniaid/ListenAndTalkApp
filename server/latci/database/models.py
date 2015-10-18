@@ -95,7 +95,6 @@ class Student(Model, TimestampMixin):
     name_last = Column(Text, nullable=False)
 
 
-
 class Staff(Model, TimestampMixin):
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name_first = Column(Text, nullable=False)
@@ -117,7 +116,7 @@ class AttendanceStatus(Model, UniqueLookupTable):
     pass
 
 
-class Activity(Model, TimestampMixin):
+class Activity(Model): # , TimestampMixin
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(Text, nullable=False)
 
@@ -141,8 +140,8 @@ class ActivityEnrollment(Model):
     start_date = Column(Date, nullable=False, default=sql.func.now())
     end_date = Column(Date, nullable=True)
 
-    activity = relationship('Activity', backref=backref('enrollment'))
-    student = relationship('Student', backref=backref('enrollment'))
+    activity = relationship('Activity', backref=backref('enrollment', lazy=True))
+    student = relationship('Student', backref=backref('enrollment', lazy=True))
 
 
 class Attendance(Model):
