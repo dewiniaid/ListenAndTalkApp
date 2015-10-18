@@ -8,6 +8,8 @@ server-venv/
 
 # Don't allow the config file with database passwords to hit the repository
 server/latci/config.py
+# ... or some testing code with API stuff
+static/auth_test.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
