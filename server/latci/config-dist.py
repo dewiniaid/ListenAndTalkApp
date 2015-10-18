@@ -50,5 +50,14 @@ AUTH_TRUSTED_PROXIES = {'127.0.0.1'}
 # Rather than existing as a scheduled task, this process runs about 1 in every N pageloads -- if those pageloads
 # involve authorized clients.  There's no harm having expired sessions in the database other than disk space
 # consumption and a tiny amount of performance, so this is safe to have fairly high.
-
 AUTH_CLEANUP_FREQ = 100
+
+# How should the backend handle uncaught exceptions
+# 'native' - Let the web framework do its normal thing with exceptions.
+# 'silent' - Return 500 status with no explanation
+# 'quiet' - Return 500 status with a JSON error response noting that an exception occured.
+# 'normal' - Return 500 status with a JSON error response noting -which- exception occured.
+# 'full' - Return 500 status with a JSON error response including full exception details.
+# The default is 'normal'.  'full' should not be used in production environments.
+# Unrecognized responses are treated as the default.
+EXCEPTION_HANDLING = 'full'
