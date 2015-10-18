@@ -28,16 +28,22 @@ class Model():
     """
     Base class for all ORM Objects (which correspond to tables in the database.
     """
-
-    def __init__(self, *args, **kwargs):
-        self._schema = None
-
     # Allow lazy evalaution of schema internal property.
     @property
     def schema(self):
-        if self._schema is None:
-            self._schema = self.Schema(instance=self)
+        if not hasattr(self, '_schema'):
+            setattr(self, '_schema', self.SchemaClass(instance=self))
         return self._schema
+
+    def dump(self, *args, **kwargs):
+        return self.schema.dump(self, *args, **kwargs)
+    def dumps(self, *args, **kwargs):
+        return self.schema.dumps(self, *args, **kwargs)
+    def load(self, *args, **kwargs):
+        return self.schema.load(self, *args, **kwargs)
+    def loads(self, *args, **kwargs):
+        return self.schema.loads(self, *args, **kwargs)
+
 
     @declared_attr
     def __tablename__(cls):
