@@ -9,22 +9,33 @@ backwards-incompatible changes.
 """
 import marshmallow_jsonapi
 import marshmallow_sqlalchemy
+import marshmallow
+import operator
+import sqlalchemy
 
 
-class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS, marshmallow_jsonapi.Schema.OPTIONS_CLASS):
+class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS): #, marshmallow_jsonapi.Schema.OPTIONS_CLASS):
     def __init__(self, meta):
         super().__init__(meta)
         if self.model is None:
             return
 
-        if self.type_ == '' or self.type_ is None:
-            self.type_ = self.model.__name__.lower()
-            print(repr(self.type_))
-
+        # if self.type_ == '' or self.type_ is None:
+        #     self.type_ = self.model.__name__.lower()
+        #     print(repr(self.type_))
+        #
         if not getattr(meta, 'writable_pk', False):
             # Add primary keys to dump_only
             self.dump_only += tuple(col.name for col in self.model.__table__.primary_key.columns)
 
 
-class Schema(marshmallow_sqlalchemy.ModelSchema, marshmallow_jsonapi.Schema):
+class Schema(marshmallow_sqlalchemy.ModelSchema): #, marshmallow_jsonapi.Schema):
     OPTIONS_CLASS = SchemaOptions
+    # @marshmallow.pre_dump
+    # def data_filter(self, obj):
+    #     unloaded = sqlalchemy.inspect(obj).unloaded
+    #     rv = {
+    #         attr: getattr(obj, attr) for attr in self.fields.keys() if attr not in unloaded
+    #     }
+    #     return dict(rv)
+
