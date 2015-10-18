@@ -8,10 +8,11 @@ a. A session_id, which corresponds to a row in a database sessions table
 b. A id_token, which corresponds to a Google Signin Token
 
 These may be specified as:
-* A cookie ('SessionID' or 'Cookie' containing the appropriate payload, or
+* A cookie named SessionID containing the appropriate payload, or
 * In the 'auth' field of the JSON payload, e.g.
     auth: { session_id: "payload" }
     or auth: { id_token: "payload" }
+* In the HTTP Authorization header as { session_id: "payload" } or { id_token: "payload" }
 
 If we receive a LoginToken, we do the following:
 * Authenticate it vs. Google to get an email address, or fail (invalid token)
@@ -40,6 +41,7 @@ import collections.abc
 import os
 
 import base64
+import json
 
 def client_address(req = None):
     """
@@ -71,13 +73,30 @@ class AuthSession():
 
     cookie_params = {'name': 'session_id'}
 
-    def __init__(self, session=None, token=None, session_id=None, db=None):
+    def __json__(self):
+        rv = {}
+        if self.session is not None:
+            rv['session'] = self.session
+            rv['expires'] = self.session.expires
+
+        if self.error is not None:
+            rv['error'] = self.error
+            rv['status'] = 'error'
+
+        elif self.is_valid:
+            rv['status'] = 'ok'
+
+        if self.error is not None or self.session is None:
+            rv['oauth2-client-id'] = config.OAUTH2_CLIENT_ID
+
+        return rv
+
+    def __init__(self, token=None, session_id=None, db=None):
         """
         Creates a new AuthSession based on provided fields.
 
         Only one of (token, session_id, session) will be examined, based on the first non-None argument in that order.
 
-        :param session: An existing StaffSession, or None
         :param token: An id_token from Google Signin, or None
         :param session_id: A session ID, or none
         :param db: A database session, or None to None.
@@ -101,17 +120,21 @@ class AuthSession():
             session = db.query(models.StaffSession).get(session_id)
             if session is None:
                 self.error = 'Session expired.'
+                return
+        else:
+            session = None
+            self.error = 'Authentication required.'
+            return
 
         self.session = session
-        if session is not None:
-            if not session.staff.can_login:
-                self.error = "Account disabled."
-            elif session.is_expired:
-                self.error = "Session expired."
-            else:
-                self.is_valid = True
-
+        if not session.staff.can_login:
+            self.error = "Account disabled."
+        elif session.is_expired:
+            self.error = "Session expired."
+        else:
+            self.is_valid = True
         return
+
 
     def _parsetoken(self, token):
         """Assists in validation of id_tokens from Google Signin"""
@@ -184,19 +207,39 @@ class AuthSession():
         if request is None:
             request = bottle.request
 
-        if isinstance(request.json, collections.Mapping) and isinstance(request.json.get('auth'), collections.Mapping):
-            token = request.json['auth'].get('id_token')
-            session_id = request.json['auth'].get('session_id')
+        def _parse_dict(d):
+            if not isinstance(d, collections.Mapping):
+                return None
+
+            token = d.get('id_token')
+            session_id = d.get('session_id')
 
             if token:
                 return cls(token=token, db=db)
             elif session_id:
                 return cls(session_id=session_id, db=db)
+            return None
 
-        session_id = request.cookies.get(self.cookie_params['name'])
+        if isinstance(request.json, collections.Mapping):
+            instance = _parse_dict(request.json['auth'])
+            if instance:
+                return instance
+
+        authorization = bottle.request.get_header('Authorization')
+        if authorization is not None:
+            try:
+                payload = json.loads(authorization)
+                instance = _parse_dict(payload)
+                if instance:
+                    return instance
+            except ValueError:
+                pass
+
+        session_id = request.cookies.get('session_id')
         if session_id is not None:
             return cls(session_id=session_id, db=db)
 
+        return cls()
 
 def create_session(staff, ip=None, db=None):
     """
@@ -285,7 +328,7 @@ def maybe_cleanup_sessions(db=None):
     return None
 
 
-def auth_wrapper(required, keyword, attach_json):
+def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
     """
     Creates a wrapper for callables that service requests.
 
@@ -293,17 +336,33 @@ def auth_wrapper(required, keyword, attach_json):
         authentication fails
     :param keyword: Name of a keyword argument containing an AuthSession to pass to the wrapped function
     :param attach_json: If True and the wrapped function returns something dict-like, attach an auth: key to the dict
+    :param fn: Optional parameter to avoid decorator syntax.
     :return:
     """
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        db = kwargs.get('db', None)
-        maybe_cleanup_sessions(db)
-        auth = AuthSession.create_from_request(bottle.request, db)
-        if auth.is_valid:
-            auth.set_cookie(bottle.response)
-            visit_session(auth.session)
+    def wrapper(fn):
+        @functools.wraps(fn)
+        def decorator(*args, **kwargs):
+            db = kwargs.get('db', None)
+            maybe_cleanup_sessions(db)
+            auth = AuthSession.create_from_request(bottle.request, db)
+            if auth.is_valid:
+                auth.set_cookie(bottle.response)
+                visit_session(auth.session)
+            elif required:
+                bottle.response.status = 403
+                return {
+                    'auth': auth,
+                    'errors': [{'ref': None, 'text': 'Authentication required.'}]
 
-        if attach_json:
-            pass
+            # Still here?  Call wrapped function
+            rv = fn(*args, **kwargs)
 
+            # Add JSON goodies
+            if attach_json and isinstance(rv, dict):
+                rv['auth'] = auth
+
+            return rv
+        return decorator
+    if fn is None:
+        return wrapper
+    return wrapper(fn)
