@@ -8,6 +8,7 @@ import sqlalchemy.event
 import latci.database
 
 from latci import config
+import latci.json
 
 # Set up WSGI application
 bottle.install(
@@ -20,6 +21,12 @@ bottle.install(
         use_kwargs=False # If it is true and keyword is not defined, plugin uses **kwargs argument to inject session database (default False).
     )
 )
+# Uninstall the JSON plugin Bottle installs by default, and add one configured the way we want.
+app = bottle.app()
+app.uninstall(bottle.JSONPlugin)
+app.install(bottle.JSONPlugin(json_dumps=latci.json.dumps))
+
+
 @route('/static/<path:path>')
 def serve_static_files(path):
     print("Whee")
