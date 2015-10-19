@@ -340,6 +340,9 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
     :return:
     """
     def wrapper(fn):
+        if config.OAUTH2_DEBUG_NOLOGIN:
+            return fn
+
         @functools.wraps(fn)
         def decorator(*args, **kwargs):
             db = kwargs.get('db', None)
@@ -353,6 +356,7 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
                 return {
                     'auth': auth,
                     'errors': [{'ref': None, 'text': 'Authentication required.'}]
+                }
 
             # Still here?  Call wrapped function
             rv = fn(*args, **kwargs)

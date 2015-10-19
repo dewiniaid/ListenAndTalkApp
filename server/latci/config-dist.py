@@ -27,7 +27,10 @@ OAUTH2_DOMAINS = None
 # If this is a value other than None, an Auth result not in the database will authenticate to this staff
 # rather than failing as an unauthorized user.
 # Make this None in a production environment.
-OAUTH2_DEBUG_STAFF_ID = 1
+OAUTH2_DEBUG_STAFF_ID = None
+
+# Set this to true to force authentication to be skipped, and identify as OAUTH2_DEBUG_STAFF_ID instead.
+OAUTH2_DEBUG_NOLOGIN = False
 
 # Lifetime for sessions in seconds.  Affects serverside database storage.  Renewed on every access.
 AUTH_SESSION_LIFETIME = 60 * 60
@@ -51,6 +54,10 @@ AUTH_TRUSTED_PROXIES = {'127.0.0.1'}
 # involve authorized clients.  There's no harm having expired sessions in the database other than disk space
 # consumption and a tiny amount of performance, so this is safe to have fairly high.
 AUTH_CLEANUP_FREQ = 100
+
+# Not Yet Implemented.  Experimental code to disable sessions outright and use id_tokens exclusively.
+AUTH_DISABLE_SESSIONS = False
+
 
 # How should the backend handle uncaught exceptions
 # 'native' - Let the web framework do its normal thing with exceptions.
