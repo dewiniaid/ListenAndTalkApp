@@ -40,6 +40,8 @@ def wrap_exceptions(fn, mode=_exception_mode):
         except bottle.HTTPResponse:
             raise
         except Exception as ex:
+            import traceback
+            print(traceback.format_exc())
             if mode == 'silent':
                 bottle.abort(500, '')
                 return  # Unreachable
@@ -49,17 +51,18 @@ def wrap_exceptions(fn, mode=_exception_mode):
                 'text': 'An unexpected exception occured.'
             }
             if mode != 'quiet':
-                error['exception'] = repr(ex.__classname__)
+                error['exception'] = repr(ex.__class__)
 
                 if mode == 'full':
-                    import traceback
                     error['backtrace'] = traceback.format_exc()
 
-            raise bottle.HTTPError(
-                status=http.client.INTERNAL_SERVER_ERROR,
-                body = {
-                    'errors': [error]
-                }
-            )
+            bottle.response.status=http.client.INTERNAL_SERVER_ERROR
+            return {'errors': [error]}
+            # raise bottle.HTTPResponse(
+            #     status=http.client.INTERNAL_SERVER_ERROR,
+            #     body={
+            #         'errors': [error]
+            #     }
+            # )
 
     return wrapper
