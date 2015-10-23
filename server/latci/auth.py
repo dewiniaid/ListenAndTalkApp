@@ -43,6 +43,14 @@ import os
 import base64
 import json
 
+from latci.api.errors import APIError
+
+
+class RequiresAuthenticationError(APIError):
+    name = 'authentication_required'
+    text = 'Authentication required.'
+
+
 def client_address(req = None):
     """
     Returns the client's IP address.
@@ -355,7 +363,7 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
                 bottle.response.status = 403
                 return {
                     'auth': auth,
-                    'errors': [{'ref': None, 'text': 'Authentication required.'}]
+                    'errors': [RequiresAuthenticationError()]
                 }
 
             # Still here?  Call wrapped function
