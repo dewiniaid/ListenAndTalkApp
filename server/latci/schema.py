@@ -29,6 +29,7 @@ class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS): #, marshm
             self.dump_only += tuple(col.name for col in self.model.__table__.primary_key.columns)
 
 
+# noinspection PyAbstractClass
 class Schema(marshmallow_sqlalchemy.ModelSchema): #, marshmallow_jsonapi.Schema):
     OPTIONS_CLASS = SchemaOptions
     # @marshmallow.pre_dump

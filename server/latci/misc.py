@@ -56,7 +56,7 @@ def wrap_exceptions(fn, mode=_exception_mode):
                 if mode == 'full':
                     error['backtrace'] = traceback.format_exc()
 
-            bottle.response.status=http.client.INTERNAL_SERVER_ERROR
+            bottle.response.status = http.client.INTERNAL_SERVER_ERROR
             return {'errors': [error]}
             # raise bottle.HTTPResponse(
             #     status=http.client.INTERNAL_SERVER_ERROR,

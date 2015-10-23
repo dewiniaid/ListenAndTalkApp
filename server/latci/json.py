@@ -12,6 +12,7 @@ import json
 import datetime
 import functools
 
+
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, (datetime.datetime, datetime.date, datetime.time)):

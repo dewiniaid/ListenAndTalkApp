@@ -37,13 +37,15 @@ class Model():
 
     def dump(self, *args, **kwargs):
         return self.schema.dump(self, *args, **kwargs)
+
     def dumps(self, *args, **kwargs):
         return self.schema.dumps(self, *args, **kwargs)
+
     def load(self, *args, **kwargs):
         return self.schema.load(self, *args, **kwargs)
+
     def loads(self, *args, **kwargs):
         return self.schema.loads(self, *args, **kwargs)
-
 
     @declared_attr
     def __tablename__(cls):
@@ -86,7 +88,7 @@ class UniqueLookupTable(LookupTable):
 
 class TimestampMixin():
     date_created = Column(DateTime(timezone=True), default=sql.func.now())
-    date_inactive  = Column(DateTime(timezone=True), default=None)
+    date_inactive = Column(DateTime(timezone=True), default=None)
 
 
 class Student(Model, TimestampMixin):
@@ -116,7 +118,7 @@ class AttendanceStatus(Model, UniqueLookupTable):
     pass
 
 
-class Activity(Model): # , TimestampMixin
+class Activity(Model):  # , TimestampMixin
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(Text, nullable=False)
 
@@ -213,7 +215,7 @@ class StaffSession(Model):
     @is_expired.expression
     def is_expired(cls):
         now = sql.func.now
-        seconds = lambda x: datetime.timedelta(seconds=x)
+        seconds = lambda x: datetime.timedelta(seconds=x)  # Shortcut
         cond = cls.visited < (now - seconds(config.AUTH_SESSION_LIFETIME))
         if config.AUTH_SESSION_MAXLIFETIME:
             cond |= (cls.created < (now - seconds(config.AUTH_SESSION_MAXLIFETIME)))
@@ -225,6 +227,7 @@ class StaffSession(Model):
 # and heavily modified.
 @sqlalchemy.event.listens_for(mapper, 'after_configured')
 def setup_schema():
+    # noinspection PyProtectedMember
     for class_ in Model._decl_class_registry.values():
         if not hasattr(class_, '__tablename__'):
             continue  # Skip abstract classes that don't have an underlying table.
