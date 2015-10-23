@@ -12,7 +12,7 @@ from sqlalchemy.types import *
 from sqlalchemy.dialects.postgresql import INET  # IP Addresses (non-standard type)
 
 # ORM
-from sqlalchemy.orm import relationship, backref, mapper
+from sqlalchemy.orm import relationship, backref, mapper, configure_mappers
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 import sqlalchemy.event
@@ -255,3 +255,5 @@ def setup_schema():
         )
         setattr(class_, 'SchemaClass', schema_class)
         print(repr(class_))
+
+configure_mappers()
