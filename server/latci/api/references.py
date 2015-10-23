@@ -3,6 +3,7 @@ Manages references.
 """
 from abc import ABCMeta, abstractmethod
 
+
 class AbstractReference(metaclass=ABCMeta):
     manager = None
 
@@ -75,6 +76,7 @@ class AbstractReference(metaclass=ABCMeta):
         if isinstance(other, AbstractReference):
             return other.manager.typename == self.manager.typename and other.to_key() == self.to_key()
 
+
 class ScalarReference(AbstractReference):
     def __init__(self, value):
         self.value = value
@@ -143,13 +145,12 @@ class ScalarReferenceManager:
     @classmethod
     def from_controller(cls, controller, *a, **kw):
         modelclass = kw.pop('modelclass', controller.model)
-        typename = kw.pop('typename', controller.resource_name)
+        typename = kw.pop('typename', controller.name)
         makeurl = kw.pop('makeurl', controller.url_base + "/{}")
 
         return cls(
             controller.model,
-            controller.resource_name,
+            controller.name,
             controller.url_base + "/{}",
             *a, **kw
         )
-
