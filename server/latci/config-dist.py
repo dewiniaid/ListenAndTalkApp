@@ -32,32 +32,9 @@ OAUTH2_DEBUG_STAFF_ID = None
 # Set this to true to force authentication to be skipped, and identify as OAUTH2_DEBUG_STAFF_ID instead.
 OAUTH2_DEBUG_NOLOGIN = False
 
-# Lifetime for sessions in seconds.  Affects serverside database storage.  Renewed on every access.
-AUTH_SESSION_LIFETIME = 60 * 60
-
-# Absolute maximum session lifetime in seconds.  Sessions are terminated if they exist for more this duration.
-AUTH_SESSION_MAXLIFETIME = 24 * 60 * 60
-
-# Lifetime for session cookies in seconds.  This gets renewed at every request.  Set to None to have cookies expire
-# immediately upon browser close.
-AUTH_COOKIE_LIFETIME = AUTH_SESSION_LIFETIME
-
-# Key length for session IDs in bytes.
-AUTH_SESSION_KEYLEN = 16
-
 # When determining the IP address of a remote client, we ignore proxy servers with these IP addresses.
 # This list should always include 127.0.0.1
 AUTH_TRUSTED_PROXIES = {'127.0.0.1'}
-
-# The backend will periodically delete expired sessions from the database.
-# Rather than existing as a scheduled task, this process runs about 1 in every N pageloads -- if those pageloads
-# involve authorized clients.  There's no harm having expired sessions in the database other than disk space
-# consumption and a tiny amount of performance, so this is safe to have fairly high.
-AUTH_CLEANUP_FREQ = 100
-
-# Not Yet Implemented.  Experimental code to disable sessions outright and use id_tokens exclusively.
-AUTH_DISABLE_SESSIONS = False
-
 
 # How should the backend handle uncaught exceptions
 # 'native' - Let the web framework do its normal thing with exceptions.
