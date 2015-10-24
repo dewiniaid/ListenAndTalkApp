@@ -396,7 +396,7 @@ class RESTController(metaclass=RESTMeta):
                 pass
             except err.APIError as ex:
                 db.rollback()
-                response.status = ex.status
+                ex.modify_response(response)
                 instance.errors.append(ex)
                 return {'errors': instance.errors}
         except err.APIError as ex:
