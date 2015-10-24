@@ -528,7 +528,7 @@ class RESTController(metaclass=RESTMeta):
             try:
                 result = query.one()
             except orm.exc.NoResultFound:
-                bottle.abort(404)
+                raise err.NotFoundError(ref=self.ref)
             return {'data': self.process_out(result)}
         else:
             return {'data': [self.process_out(row) for row in query]}

@@ -32,7 +32,7 @@ import time
 from sqlalchemy import orm, exc
 from latci import config
 from latci.database import models, Session
-import random
+import latci.json
 
 import bottle
 import functools
@@ -44,14 +44,65 @@ import base64
 import json
 
 from latci.api.errors import APIError
+import http.client
 
 
 class RequiresAuthenticationError(APIError):
-    name = 'authentication_required'
+    name = 'authentication-required'
     text = 'Authentication required.'
+    status = http.client.UNAUTHORIZED
+
+    def modify_response(self, response, *, _attrs=None):
+        super().modify_response(response)
+
+        attrs = {} if _attrs is None else _attrs
+        if config.AUTH_REALM and 'realm' not in attrs:
+            attrs['realm'] = config.AUTH_REALM
+
+        response.headers['WWW-Authenticate'] = (
+            "Bearer " + ", ".join(
+                k + '=' + latci.json.dumps(v) for k, v in attrs.items()
+            )
+        )
+        return
 
 
-def client_address(req = None):
+class FailedAuthenticationError(RequiresAuthenticationError):
+    name = 'authentication-failed'
+    text = 'Authentication failed.'
+
+    def __init__(self, hint=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hint = hint
+
+    def __json__(self):
+        rv = super().__json__()
+        if self.hint:
+            rv['hint'] = self.hint
+        return rv
+
+    def modify_response(self, response):
+        return super().modify_response(
+            response,
+            _attrs={
+                'error': 'invalid_token',
+                'error_description': self.text
+            }
+        )
+
+
+class ExpiredAuthenticationError(FailedAuthenticationError):
+    name = 'authentication-expired'
+    text = 'Authentication Expired.'
+
+
+class UserNotAuthorizedError(FailedAuthenticationError):
+    name = 'access-denied'
+    text = None
+    fmt = "Email address '{email}' is not authorized for this site."
+
+
+def client_address(req=None):
     """
     Returns the client's IP address.
     :param req: Request object, defaults to bottle.request if None
@@ -60,7 +111,7 @@ def client_address(req = None):
     if req is None:
         req = bottle.request
 
-    ips = reversed(req.remote_route + [req.environ.get('REMOTE_ADDR')])
+    ips = list(reversed(req.remote_route + [req.environ.get('REMOTE_ADDR')]))
     for ip in ips:
         if ip not in config.AUTH_TRUSTED_PROXIES:
             return ip

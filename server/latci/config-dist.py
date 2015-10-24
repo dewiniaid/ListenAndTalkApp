@@ -49,6 +49,9 @@ AUTH_SESSION_KEYLEN = 16
 # This list should always include 127.0.0.1
 AUTH_TRUSTED_PROXIES = {'127.0.0.1'}
 
+# What 'realm' to present in the WWW-Authenticate header.  None means this field is not included.
+AUTH_REALM = 'latci'
+
 # The backend will periodically delete expired sessions from the database.
 # Rather than existing as a scheduled task, this process runs about 1 in every N pageloads -- if those pageloads
 # involve authorized clients.  There's no harm having expired sessions in the database other than disk space
