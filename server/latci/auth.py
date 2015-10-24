@@ -27,6 +27,7 @@ If we receive a SessionID, we do the following:
 * Return login information
 """
 import oauth2client.client
+from oauth2client.crypt import AppIdentityError
 import time
 from sqlalchemy import orm
 from latci import config
@@ -39,6 +40,8 @@ import collections.abc
 from latci.api.errors import APIError
 import http.client
 import datetime
+import http.client
+
 
 
 class RequiresAuthenticationError(APIError):
@@ -136,8 +139,10 @@ class AuthSession:
             rv['expires'] = self.expires
         else:
             rv['oauth2-client-id'] = config.OAUTH2_CLIENT_ID
-        return rv
 
+        if self.error is not None:
+            rv['error'] = self.error
+        return rv
 
     def __init__(self, token=None, db=None):
         """
@@ -171,7 +176,21 @@ class AuthSession:
 
     def parse_token(self, token):
         """Assists in validation of id_tokens from Google Signin"""
-        idinfo = oauth2client.client.verify_id_token(token, config.OAUTH2_CLIENT_ID)
+
+        oauth_error = None
+
+        # oauth2client's verify_id_token is nice and does a lot of validation for us, BUT... it's not particularly
+        # detailed on the exceptions that it throws.  So if it fails, we retry the operation using the 'non-secure'
+        # method and run it through our own checks.  If it somehow passes our own checks, we still treat it as a
+        # failure and return the original failure message -- otherwise we return our own.
+        try:
+            idinfo = oauth2client.client.verify_id_token(token, config.OAUTH2_CLIENT_ID)
+        except AppIdentityError as ex:
+            oauth_error = ex
+            try:
+                idinfo = oauth2client.client._extract_id_token(token)
+            except Exception as ex:
+                raise FailedAuthenticationError("Failed to parse id_token.")
         if idinfo['aud'] != config.OAUTH2_CLIENT_ID:  # Is the token intended for us as an audience?
             raise FailedAuthenticationError("Unrecognized client ID.")
         if idinfo['iss'] not in config.OAUTH2_ISSUERS:  # Is it from an allowed issuer?
@@ -187,6 +206,11 @@ class AuthSession:
             raise FailedAuthenticationError("Email address not available.")
         if not idinfo.get('email_verified', False):
             raise FailedAuthenticationError("A verified email address is required.")
+
+        # We see nothing wrong with the token on the surface, so if there was an oauth_error return it.
+        if oauth_error:
+            raise FailedAuthenticationError("Validation error: " + str(oauth_error))
+
         # If we're still here, Google says they're a valid user.  Let's check the database to see if they exist.
         try:
             query = self.db.query(models.Staff).filter(models.Staff.date_inactive.is_(None))
@@ -215,7 +239,7 @@ class AuthSession:
         if auth:
             auth = auth.split(' ', 2)
             if len(auth) == 2:
-                if auth[0] in ('Bearer', 'OAuth'):
+                if auth[0] == 'OAuth':
                     return cls(token=auth[1], db=db)
         return cls()
 
@@ -239,10 +263,10 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
         def decorator(*args, **kwargs):
             auth = AuthSession.from_request(bottle.request)
             if not auth.is_valid:
-                if required:
+                if required and auth.error is None:
                     auth.error = RequiresAuthenticationError()
             if auth.error:
-                bottle.response.status = 403
+                auth.error.modify_response(bottle.response)
                 return {
                     'auth': auth.__json__(),
                     'errors': [auth.error]
