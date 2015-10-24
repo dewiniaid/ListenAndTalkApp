@@ -31,19 +31,38 @@ import time
 from sqlalchemy import orm
 from latci import config
 from latci.database import models, Session
+import latci.json
+
 import bottle
 import functools
 import collections.abc
 from latci.api.errors import APIError
+import http.client
 import datetime
 
+
 class RequiresAuthenticationError(APIError):
-    name = 'authentication_required'
+    name = 'authentication-required'
     text = 'Authentication required.'
+    status = http.client.UNAUTHORIZED
+
+    def modify_response(self, response, *, _attrs=None):
+        super().modify_response(response)
+
+        attrs = {} if _attrs is None else _attrs
+        if config.AUTH_REALM and 'realm' not in attrs:
+            attrs['realm'] = config.AUTH_REALM
+
+        response.headers['WWW-Authenticate'] = (
+            "Bearer " + ", ".join(
+                k + '=' + latci.json.dumps(v) for k, v in attrs.items()
+            )
+        )
+        return
 
 
 class FailedAuthenticationError(RequiresAuthenticationError):
-    name = 'authentication_failed'
+    name = 'authentication-failed'
     text = 'Authentication failed.'
 
     def __init__(self, hint=None, *args, **kwargs):
@@ -56,14 +75,23 @@ class FailedAuthenticationError(RequiresAuthenticationError):
             rv['hint'] = self.hint
         return rv
 
+    def modify_response(self, response):
+        return super().modify_response(
+            response,
+            _attrs={
+                'error': 'invalid_token',
+                'error_description': self.text
+            }
+        )
+
 
 class ExpiredAuthenticationError(FailedAuthenticationError):
-    name = 'authentication_expired'
+    name = 'authentication-expired'
     text = 'Authentication Expired.'
 
 
 class UserNotAuthorizedError(FailedAuthenticationError):
-    name = 'access_denied'
+    name = 'access-denied'
     text = None
     fmt = "Email address '{email}' is not authorized for this site."
 

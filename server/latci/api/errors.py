@@ -67,10 +67,13 @@ class APIError(Exception):
             d['ref'] = None
         return d
 
+    def modify_response(self, response):
+        response.status = self.status
+
 
 class RequestNotAllowedError(APIError):
     status = http.client.METHOD_NOT_ALLOWED
-    name = 'request_method_not_allowed'
+    name = 'request-method-not-allowed'
     text = 'Request Method Not Allowed'
 
 

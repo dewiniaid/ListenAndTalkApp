@@ -36,6 +36,9 @@ OAUTH2_DEBUG_NOLOGIN = False
 # This list should always include 127.0.0.1
 AUTH_TRUSTED_PROXIES = {'127.0.0.1'}
 
+# What 'realm' to present in the WWW-Authenticate header.  None means this field is not included.
+AUTH_REALM = 'latci'
+
 # How should the backend handle uncaught exceptions
 # 'native' - Let the web framework do its normal thing with exceptions.
 # 'silent' - Return 500 status with no explanation
