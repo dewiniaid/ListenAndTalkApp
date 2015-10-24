@@ -42,7 +42,7 @@ class APIError(Exception):
             fmt = self.__class__.fmt
             text = self.__class__.text
         if fmt:
-            self.text = fmt.format(self.params)
+            self.text = fmt.format(**self.params)
         else:
             self.text = text
             if self.text is None:
