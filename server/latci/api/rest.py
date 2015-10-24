@@ -566,7 +566,11 @@ class RESTController(metaclass=RESTMeta):
         if data is None:
             data = self.data
 
-        self.cache.add_all(self.query(tuple(item['ref'] for item in listify(self.data) if item['ref'] is not None)))
+        refs = tuple(item['ref'] for item in listify(self.data) if item['ref'] is not None)
+        if not refs:
+            return
+
+        self.cache.add_all(self.query(ref=refs))
         # result = query.merge_all(query)
         # self.cache.add_all(query.merge_all(query))
 
