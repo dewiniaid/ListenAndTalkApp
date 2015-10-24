@@ -41,7 +41,6 @@ def token_info(db, token):
 # Required for proper initialization of routes
 import latci.views
 import functools
-
 runserver = functools.partial(bottle.run, host='0.0.0.0', port=8000, debug=True)
 
 def cli_shell():
@@ -131,7 +130,6 @@ def main(argv):
             use_kwargs=True # If it is true and keyword is not defined, plugin uses **kwargs argument to inject session database (default False).
         )
     )
-
 
     import sys
     if 'shell' in sys.argv:

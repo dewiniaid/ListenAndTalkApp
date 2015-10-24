@@ -118,7 +118,7 @@ class AttendanceStatus(Model, UniqueLookupTable):
     pass
 
 
-class Activity(Model):  # , TimestampMixin
+class Activity(Model, TimestampMixin):
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(Text, nullable=False)
 

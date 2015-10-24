@@ -1,4 +1,5 @@
 __author__ = 'Daniel'
+import http.client
 
 
 class APIError(Exception):
@@ -17,7 +18,8 @@ class APIError(Exception):
     """
 
     name = None
-    status = 500
+    fmt = None
+    status = http.client.INTERNAL_SERVER_ERROR
 
     def __init__(self, text=None, ref=None, name=None, fmt=None, status=None, params=None):
         """
@@ -66,31 +68,43 @@ class APIError(Exception):
         return d
 
 
+class RequestNotAllowedError(APIError):
+    status = http.client.METHOD_NOT_ALLOWED
+    name = 'request_method_not_allowed'
+    text = 'Request Method Not Allowed'
+
+
 class JSONValidationError(APIError):
-    status = 400
+    status = http.client.BAD_REQUEST
     name = 'json-invalid-error'
     text = 'JSON Request Body is not expected here.'
 
 
 class ValidationError(APIError):
-    status = 400
+    status = http.client.BAD_REQUEST
     name = 'validation-error'
     text = 'Validation error.'
 
 
+class DatabaseIntegrityViolation(ValidationError):
+    status = http.client.BAD_REQUEST
+    name = 'integrity-violation'
+    text = 'The requested action violates database integrity constraints.'
+
+
 class MissingKeyError(APIError):
-    status = 400
+    status = http.client.BAD_REQUEST
     name = 'key-required'
     text = 'Data element must have a key.'
 
 
 class MissingValueError(APIError):
-    status = 400
+    status = http.client.BAD_REQUEST
     name = 'value-required'
     text = 'Data element must have a value.'
 
 
 class NotFoundError(APIError):
-    status = 404
+    status = http.client.NOT_FOUND
     name = 'not-found'
     text = 'Object(s) not found.'

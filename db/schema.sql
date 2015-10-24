@@ -117,7 +117,8 @@ CREATE TABLE activity (  -- Sometimes also called a "Roster"
 	allow_dropins BOOLEAN NOT NULL DEFAULT FALSE,	-- "Drop-in" classes don't maintain a roster, but instead allow an ad-hoc selection 
 	-- of a particular student + attendance status.
 	
-	date_inactive TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this student is "deleted"; date is for future use in case we want to purge records from X years ago.
+	date_inactive TIMESTAMP WITH TIME ZONE NULL,  -- if non-NULL, this activity is "deleted"; date is for future use in case we want to purge records from X years ago.
+	date_created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
 	PRIMARY KEY(id),
 	FOREIGN KEY(staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE RESTRICT,

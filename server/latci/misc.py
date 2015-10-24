@@ -5,6 +5,7 @@ import bottle
 import functools
 import latci.config
 import http.client
+
 # How should the backend handle uncaught exceptions
 # 'native' - Let the web framework do its normal thing with exceptions.
 # 'silent' - Return 500 status with no explanation

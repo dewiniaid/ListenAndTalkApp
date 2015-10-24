@@ -2,9 +2,13 @@
 Manages references.
 """
 from abc import ABCMeta, abstractmethod
+import sqlalchemy as sa
 
 
 class AbstractReference(metaclass=ABCMeta):
+    """
+    Abstract reference base class.
+    """
     manager = None
 
     @abstractmethod
@@ -78,6 +82,9 @@ class AbstractReference(metaclass=ABCMeta):
 
 
 class ScalarReference(AbstractReference):
+    """
+    Refers to objects with a single 'value' attribute, as opposed to any composite form.
+    """
     def __init__(self, value):
         self.value = value
 
@@ -110,7 +117,7 @@ class ScalarReference(AbstractReference):
         Returns an SQL Expression that evaluates to True if a database object equals any of the references included in
         in refs"""
         if not refs:
-            return sql.false
+            return sa.false
         if len(refs) == 1:
             return refs[0].sql_equals()
         return getattr(cls.manager.modelclass, cls.manager.column).in_(item.value for item in refs)
@@ -128,7 +135,7 @@ class ScalarReferenceManager:
         :param column: Database column name.  Autodetected if none.
         """
         if column is None:
-            pk = inspect(modelclass).primary_key
+            pk = sa.inspect(modelclass).primary_key
             if not pk or len(pk) != 1:
                 raise ValueError("Primary key must have exactly 1 column for this ReferenceManager.")
             column = pk[0].key
