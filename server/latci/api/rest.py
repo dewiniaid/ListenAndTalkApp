@@ -60,8 +60,6 @@ def listify(obj):
     return obj if is_list(obj) else [obj]
 
 
-
-
 class InstanceCache(collections.UserDict):
     """
     Subclass UserDict to provide a cache of loaded instances.
@@ -475,11 +473,13 @@ class RESTController(metaclass=RESTMeta):
             return self.put()
         return self.patch()
 
-    def query(self, ref=None):
+    def query(self, ref=None, from_refresh=False):
         """
         Builds an SQL Query, possibly limited to a single instance (or set of instances) of our object.
 
         :param ref: Primary key reference(s).
+        :param from_refresh: True if this is originating from a refresh() operation, in which case certain filters
+            should not be applied.
         :return: Query.
         """
         query = self.db.query(self.model)
@@ -562,7 +562,12 @@ class RESTController(metaclass=RESTMeta):
         """
         raise NotImplementedError("PUT is not implemented.")
 
-    def refresh(self, data=None):
+    def preload(self, data=None, _is_refresh=False):
+        """
+        Bulk-updates the instance cache.
+        :param data: Data dictionary to use.  If None, uses self.data
+        :return:
+        """
         if data is None:
             data = self.data
 
@@ -570,9 +575,11 @@ class RESTController(metaclass=RESTMeta):
         if not refs:
             return
 
-        self.cache.add_all(self.query(ref=refs))
+        self.cache.add_all(self.query(ref=refs, from_refresh=_is_refresh))
         # result = query.merge_all(query)
         # self.cache.add_all(query.merge_all(query))
+
+    refresh = functools.partialmethod(preload, _is_refresh=True)
 
     def patch(self):
         """
@@ -580,11 +587,11 @@ class RESTController(metaclass=RESTMeta):
         :return:
         """
         rv = []
-        must_exist = self.options.get('must-exist', False)
+        must_exist = self.options.get('must-exist', True)
         deletes_must_exist = self.options.get('deletes-must-exist', must_exist)
         updates_must_exist = self.options.get('updates-must-exist', must_exist)
 
-        self.refresh()
+        self.preload()
 
         for index, item in enumerate(listify(self.data)):
             ref = item['ref']
@@ -770,8 +777,11 @@ class SortableRESTController(RESTController):
 
 # noinspection PyAbstractClass
 class InactiveFilterRESTController(RESTController):
-    def query(self, ref=None):
-        query = super().query(ref)
+    def query(self, ref=None, from_refresh=False):
+        query = super().query(ref, from_refresh)
+        if from_refresh:
+            return query
+
         field = self.model.date_inactive
         inactive = self.options.get('inactive')
         if inactive:
