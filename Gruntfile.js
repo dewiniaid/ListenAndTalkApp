@@ -13,7 +13,8 @@ module.exports = function(grunt) {
     },
     injector: {
       options: {
-        ignorePath: 'client/'
+        ignorePath: 'client/',
+        addRootSlash: false
       },
       local_dependencies: {
         files: {

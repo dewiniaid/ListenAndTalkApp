@@ -8,6 +8,8 @@
   "ignore": [
     "**/.*",
     "node_modules",
+    "server",
+    "server_venv",
     "bower_components",
     "test",
     "tests"
