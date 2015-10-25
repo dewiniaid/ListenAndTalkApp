@@ -49,6 +49,7 @@ def wrap_exceptions(fn, mode=_exception_mode):
 
             error = {
                 'ref': None,
+                'name': 'unexpected-exception',
                 'text': 'An unexpected exception occured.'
             }
             if mode != 'quiet':
@@ -59,11 +60,5 @@ def wrap_exceptions(fn, mode=_exception_mode):
 
             bottle.response.status = http.client.INTERNAL_SERVER_ERROR
             return {'errors': [error]}
-            # raise bottle.HTTPResponse(
-            #     status=http.client.INTERNAL_SERVER_ERROR,
-            #     body={
-            #         'errors': [error]
-            #     }
-            # )
 
     return wrapper
