@@ -46,7 +46,6 @@ import json
 from latci.api.errors import APIError
 import http.client
 
-
 class RequiresAuthenticationError(APIError):
     name = 'authentication-required'
     text = 'Authentication required.'
