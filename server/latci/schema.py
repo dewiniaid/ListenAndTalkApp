@@ -7,11 +7,7 @@ compatibility layer between an evolving database schema and a fixed API version.
 It might be neccessary to make a separate version 3 schema of this at some point, particularly if making
 backwards-incompatible changes.
 """
-import marshmallow_jsonapi
 import marshmallow_sqlalchemy
-import marshmallow
-import operator
-import sqlalchemy
 
 
 class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS): #, marshmallow_jsonapi.Schema.OPTIONS_CLASS):
