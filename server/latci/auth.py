@@ -29,7 +29,7 @@ If we receive a SessionID, we do the following:
 import oauth2client.client
 from oauth2client.crypt import AppIdentityError
 import time
-from sqlalchemy import orm, exc
+from sqlalchemy import orm
 from latci import config
 from latci.database import models, Session
 import latci.json
@@ -37,14 +37,11 @@ import latci.json
 import bottle
 import functools
 import collections.abc
-
-import os
-
-import base64
-import json
-
 from latci.api.errors import APIError
 import http.client
+import datetime
+import http.client
+
 
 class RequiresAuthenticationError(APIError):
     name = 'authentication-required'
@@ -117,7 +114,7 @@ def client_address(req=None):
     return ips[0]
 
 
-class AuthSession():
+class AuthSession:
     """
     Handles authentication
 
@@ -128,262 +125,122 @@ class AuthSession():
     :ivar session: Session attached to this result.
     :ivar error: Description of authentication error, if any.
     """
-
-    cookie_params = {'name': 'session_id'}
+    schema = models.Staff.SchemaClass(only=('email', 'name_first', 'name_last', 'id'))
 
     def __json__(self):
-        rv = {}
-        if self.session is not None:
-            rv['session'] = self.session
-            rv['expires'] = self.session.expires
+        rv = {
+            'valid': self.is_valid,
+            'guest': self.is_guest,
+            'staff': None
+        }
+        if self.staff:
+            rv['staff'] = self.staff  # self.schema.dump(self.staff).data
+            rv['expires'] = self.expires
+        else:
+            rv['oauth2-client-id'] = config.OAUTH2_CLIENT_ID
 
         if self.error is not None:
             rv['error'] = self.error
-            rv['status'] = 'error'
-
-        elif self.is_valid:
-            rv['status'] = 'ok'
-
-        if self.error is not None or self.session is None:
-            rv['oauth2-client-id'] = config.OAUTH2_CLIENT_ID
-
         return rv
 
-    def __init__(self, token=None, session_id=None, db=None):
+    def __init__(self, token=None, db=None):
         """
         Creates a new AuthSession based on provided fields.
 
-        Only one of (token, session_id, session) will be examined, based on the first non-None argument in that order.
-
-        :param token: An id_token from Google Signin, or None
-        :param session_id: A session ID, or none
-        :param db: A database session, or None to None.
-        :return:
+        :param token: An id_token from Google Signin or another OAUTH2 provider, or None
+        :param db: A database session, or None to create one.
         """
-        self.is_valid = False
-        self.is_guest = False
-        #self.expires = None
-        self.session = None
-        self.error = None
-
         if db is None:
             db = Session()
         self.db = db
+        self.staff = None
+        self.is_valid = False
+        self.is_guest = True
+        self.expires = None
+        self.error = None
 
         if token is not None:
-            self._parsetoken(token)
-            return
-
-        if session_id is not None:
-            session = db.query(models.StaffSession).get(session_id)
-            if session is None:
-                self.error = 'Session expired.'
+            try:
+                staff = self.parse_token(token)
+                staff.last_ip = client_address()
+                staff.last_visited = datetime.datetime.now()
+                db.add(staff)
+                db.commit()
+                self.staff = self.schema.dump(staff).data
+                self.is_valid = True
+                self.is_guest = False
                 return
-        else:
-            session = None
-            self.error = 'Authentication required.'
-            return
+            except APIError as ex:
+                self.error = ex
 
-        self.session = session
-        if not session.staff.can_login:
-            self.error = "Account disabled."
-        elif session.is_expired:
-            self.error = "Session expired."
-        else:
-            self.is_valid = True
-        return
-
-
-    def _parsetoken(self, token):
+    def parse_token(self, token):
         """Assists in validation of id_tokens from Google Signin"""
+
+        oauth_error = None
+
+        # oauth2client's verify_id_token is nice and does a lot of validation for us, BUT... it's not particularly
+        # detailed on the exceptions that it throws.  So if it fails, we retry the operation using the 'non-secure'
+        # method and run it through our own checks.  If it somehow passes our own checks, we still treat it as a
+        # failure and return the original failure message -- otherwise we return our own.
         try:
             idinfo = oauth2client.client.verify_id_token(token, config.OAUTH2_CLIENT_ID)
-            print(repr(idinfo))
-            if idinfo['aud'] != config.OAUTH2_CLIENT_ID:
-                raise AppIdentityError("Unrecognized client ID.")
-            if idinfo['iss'] not in config.OAUTH2_ISSUERS:
-                raise AppIdentityError("Invalid issuer.")
-            if config.OAUTH2_DOMAINS and idinfo['hd'] not in config.OAUTH2_DOMAINS:
-                raise AppIdentityError("Domain not authorized.")
-            if idinfo.get('exp', 0) < time.time():
-                raise AppIdentityError("Token is expired.")
-            if idinfo.get('email', None) is None:
-                raise AppIdentityError("Email address not available.")
-            self.email = idinfo['email']
-            if not idinfo.get('email_verified', False):
-                raise AppIdentityError("Email address not verified.")
-        except AppIdentityError as e:
-            self.error = e.args[0]
-            return
+        except AppIdentityError as ex:
+            oauth_error = ex
+            try:
+                idinfo = oauth2client.client._extract_id_token(token)
+            except Exception as ex:
+                raise FailedAuthenticationError("Failed to parse id_token.")
+        if idinfo['aud'] != config.OAUTH2_CLIENT_ID:  # Is the token intended for us as an audience?
+            raise FailedAuthenticationError("Unrecognized client ID.")
+        if idinfo['iss'] not in config.OAUTH2_ISSUERS:  # Is it from an allowed issuer?
+            raise FailedAuthenticationError("Invalid issuer.")
+        if config.OAUTH2_DOMAINS and idinfo['hd'] not in config.OAUTH2_DOMAINS:
+            raise FailedAuthenticationError("Domain not authorized.")
+        exp = idinfo.get('exp', 0)
+        if exp < time.time():
+            raise ExpiredAuthenticationError("Token is expired.  Please request a new token.")
+        self.expires = datetime.datetime.fromtimestamp(exp)
+        email = idinfo.get('email')
+        if email is None:
+            raise FailedAuthenticationError("Email address not available.")
+        if not idinfo.get('email_verified', False):
+            raise FailedAuthenticationError("A verified email address is required.")
+
+        # We see nothing wrong with the token on the surface, so if there was an oauth_error return it.
+        if oauth_error:
+            raise FailedAuthenticationError("Validation error: " + str(oauth_error))
 
         # If we're still here, Google says they're a valid user.  Let's check the database to see if they exist.
         try:
-            staff = db.query(models.Staff).filter(models.Staff.email == self.email).one()
-        except orm.exc.NoResultFound:
-            staff = None
+            query = self.db.query(models.Staff).filter(models.Staff.date_inactive.is_(None))
             if config.OAUTH2_DEBUG_STAFF_ID:
-                try:
-                    staff = db.query(models.Staff).get(config.OAUTH2_DEBUG_STAFF_ID)
-                except orm.exc.NoResultFound:
-                    staff = None
-            if staff is None:
-                self.error = 'Account not registered.'
-                return result
-        except orm.exc.MultipleResultsFound:
-            raise Exception("Unexpected error (multiple accounts found)")
-
-        if not staff.can_login:
-            self.error = "Account disabled."
-            return
-
-        # Create a session
-        self.session = create_session(staff)
-        #self.expires = self.session.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME)
-        #if config.AUTH_SESSION_MAXLIFETIME:
-        #    self.expires = min(
-        #        self.expires,
-        #        self.session.created + datetime.timedelta(seconds=config.AUTH_SESSION_MAXLIFETIME)
-        #    )
-        self.is_valid = True
-        return
-
-    def set_cookie(self, response=None):
-        if self.is_valid and self.session:
-            response = bottle.response
-
-        if self.session is None or not self.is_valid:
-            return response.set_cookie(
-                value='',
-                max_age=-1, **self.cookie_params)
-        return response.set_cookie(
-            value=self.session.id,
-            max_age=config.AUTH_COOKIE_LIFETIME, **self.cookie_params
-        )
+                staff = query.filter(models.Staff.id == config.OAUTH2_DEBUG_STAFF_ID).one()
+            else:
+                staff = query.filter(models.Staff.email == email).one()
+        except orm.exc.NoResultFound:
+            raise UserNotAuthorizedError(params={'email': email})
+        return staff
 
     @classmethod
-    def create_from_request(cls, request=None, db=None):
+    def from_request(cls, request=None, db=None):
         if request is None:
             request = bottle.request
 
-        def _parse_dict(d):
-            if not isinstance(d, collections.Mapping):
-                return None
-
-            token = d.get('id_token')
-            session_id = d.get('session_id')
-
+        if (
+                isinstance(request.json, collections.abc.Mapping) and
+                isinstance(request.json.get('auth'), collections.abc.Mapping)
+        ):
+            token = request.json['auth'].get('id_token')
             if token:
                 return cls(token=token, db=db)
-            elif session_id:
-                return cls(session_id=session_id, db=db)
-            return None
 
-        if isinstance(request.json, collections.Mapping):
-            instance = _parse_dict(request.json['auth'])
-            if instance:
-                return instance
-
-        authorization = bottle.request.get_header('Authorization')
-        if authorization is not None:
-            try:
-                payload = json.loads(authorization)
-                instance = _parse_dict(payload)
-                if instance:
-                    return instance
-            except ValueError:
-                pass
-
-        session_id = request.cookies.get('session_id')
-        if session_id is not None:
-            return cls(session_id=session_id, db=db)
-
+        auth = bottle.request.get_header('Authorization')
+        if auth:
+            auth = auth.split(' ', 2)
+            if len(auth) == 2:
+                if auth[0] == 'OAuth':
+                    return cls(token=auth[1], db=db)
         return cls()
-
-def create_session(staff, ip=None, db=None):
-    """
-    Creates a new StaffSession attached to the referenced staff person and returns it.
-
-    :param staff: Staff to attach
-    :param ip: IP address of creator.  Optional.
-    :param db: Database handle.  Optional.
-    :return: The new session.
-    """
-    if db is None:
-        db = Session()
-
-    if ip is None:
-        ip = client_address()
-
-    while True:
-        # In practice, this loop should never execute more than once...
-        # but just in case of the unlikely case of a hash collision, it loops
-        try:
-            db.rollback()
-            id = str(base64.b85encode(os.urandom(config.AUTH_SESSION_KEYLEN)))
-            print(repr(ip))
-            session = models.StaffSession(
-                id=id,
-                staff_id=staff.id,
-                origin_ip=ip,
-                last_ip=ip
-            )
-            db.add(session)
-            db.commit()
-        except exc.IntegrityError as ex:
-            db.rollback()
-            # This odd exception handling is because it's not possible to tell the actual cause of the IntegrityError
-            # It could also be that the referenced staff person does NOT exist
-            if 'already exists' in ex.args[0]:
-                continue  # Try again on next pass of the loop
-            else:
-                raise
-        return db.query(models.StaffSession).filter(models.StaffSession.id == id).one()
-
-
-def visit_session(session, ip=None, db=None):
-    """
-    'visits' a session -- updates last_ip and visited
-
-    :param session: A StaffSession
-    :param ip:
-    :param db:
-    :return: Updated session
-    """
-    if db is None:
-        db = Session()
-    if ip is None:
-        ip = client_address()
-
-    session.last_ip = ip
-    session.visited = sql.func.now()
-    db.rollback()
-    db.add(session)
-    db.commit()
-
-    return db.query(models.StaffSession).filter(models.StaffSession.id == session.id).one()
-
-
-def cleanup_sessions(db=None):
-    """
-    Cleans up expired sessions.
-
-    :param db: Handle to db (optional)
-    """
-    if db is None:
-        db = Session()
-
-    return db.query(models.StaffSession).filter(models.StaffSession.is_expired).delete()
-
-
-def maybe_cleanup_sessions(db=None):
-    """
-    Cleans up expired sessions based on config.AUTH_CLEANUP_FREQ
-    :param db: Optional db handle
-    :return: None, or the result of cleanup_sessions if cleanup occured.
-    """
-    if random.randint(0, config.AUTH_CLEANUP_FREQ) == 0:
-        return cleanup_sessions(db)
-    return None
 
 
 def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
@@ -391,8 +248,8 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
     Creates a wrapper for callables that service requests.
 
     :param required: True if valid authentication is required.  The underlying function will not be called if
-        authentication fails
-    :param keyword: Name of a keyword argument containing an AuthSession to pass to the wrapped function
+        authentication fails.
+    :param keyword: Name of an optional keyword argument containing an AuthSession to pass to the wrapped function
     :param attach_json: If True and the wrapped function returns something dict-like, attach an auth: key to the dict
     :param fn: Optional parameter to avoid decorator syntax.
     :return:
@@ -403,26 +260,21 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
 
         @functools.wraps(fn)
         def decorator(*args, **kwargs):
-            db = kwargs.get('db', None)
-            maybe_cleanup_sessions(db)
-            auth = AuthSession.create_from_request(bottle.request, db)
-            if auth.is_valid:
-                auth.set_cookie(bottle.response)
-                visit_session(auth.session)
-            elif required:
-                bottle.response.status = 403
+            auth = AuthSession.from_request(bottle.request)
+            if not auth.is_valid:
+                if required and auth.error is None:
+                    auth.error = RequiresAuthenticationError()
+            if auth.error:
+                auth.error.modify_response(bottle.response)
                 return {
-                    'auth': auth,
-                    'errors': [RequiresAuthenticationError()]
+                    'auth': auth.__json__(),
+                    'errors': [auth.error]
                 }
-
             # Still here?  Call wrapped function
             rv = fn(*args, **kwargs)
-
             # Add JSON goodies
             if attach_json and isinstance(rv, dict):
                 rv['auth'] = auth
-
             return rv
         return decorator
     if fn is None:

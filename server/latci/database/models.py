@@ -101,9 +101,10 @@ class Staff(Model, TimestampMixin):
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name_first = Column(Text, nullable=False)
     name_last = Column(Text, nullable=False)
-
     email = Column(Text, nullable=True)
     can_login = Column(Boolean, nullable=False, default=True)
+    last_ip = Column(INET())
+    last_visited = Column(DateTime(timezone=True))
 
 
 class Location(Model, UniqueLookupTable):
@@ -131,7 +132,7 @@ class Activity(Model, TimestampMixin):
 
     staff = relationship('Staff', lazy='joined', backref=backref('activities'))
     location = relationship('Location', lazy='joined')
-    category = relationship('Location', lazy='joined')
+    category = relationship('Category', lazy='joined')
 
 
 class ActivityEnrollment(Model):
@@ -173,53 +174,6 @@ class AttendanceUpsert(Model):
     student = relationship('Student')
     activity = relationship('Activity')
     status = relationship('AttendanceStatus', lazy='joined')
-
-
-class StaffSession(Model):
-    """Tracks sessions"""
-    id = Column(Text, primary_key=True, nullable=False)
-    staff_id = Column(Integer, ForeignKey('staff.id'), nullable=False)
-
-    created = Column(DateTime(timezone=True), nullable=False, default=sql.func.now())
-    visited = Column(DateTime(timezone=True), nullable=False, default=sql.func.now())
-
-    origin_ip = Column(INET, nullable=False)
-    last_ip = Column(INET, nullable=False)
-
-    staff = relationship('Staff', lazy='joined')
-
-    # Helper properties for determining expiration time
-    @hybrid_property
-    def expires(self):
-        expires = self.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME)
-        if config.AUTH_SESSION_MAXLIFETIME:
-            expires = min(expires, self.created + datetime.timedelta(seconds=config.AUTH_SESSION_MAXLIFETIME))
-        return expires
-
-    @expires.expression
-    def expires(cls):
-        if config.AUTH_SESSION_MAXLIFETIME:
-            return sql.func.least(
-                cls.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME),
-                cls.created + datetime.timedelta(seconds=config.AUTH_SESSION_MAXLIFETIME)
-            )
-        return cls.visited + datetime.timedelta(seconds=config.AUTH_SESSION_LIFETIME)
-
-    # Helper properties for determining whether an object is expired
-    # Note: at the SQL level, is_expired is more efficient than comparing expires as it should allow indexes to
-    # be used more optimally.
-    @hybrid_property
-    def is_expired(self):
-        return self.expires < datetime.datetime.now()
-
-    @is_expired.expression
-    def is_expired(cls):
-        now = sql.func.now
-        seconds = lambda x: datetime.timedelta(seconds=x)  # Shortcut
-        cond = cls.visited < (now - seconds(config.AUTH_SESSION_LIFETIME))
-        if config.AUTH_SESSION_MAXLIFETIME:
-            cond |= (cls.created < (now - seconds(config.AUTH_SESSION_MAXLIFETIME)))
-        return cond
 
 
 # Automatically generate Marshmallow schemas from ORM Models.  Adapted from

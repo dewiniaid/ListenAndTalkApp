@@ -26,6 +26,10 @@ CREATE TABLE staff (
 
 	can_login BOOLEAN NOT NULL DEFAULT TRUE,	-- Don't allow teachers without this to login
 	email VARCHAR NULL,
+
+	last_visited TIMESTAMP WITH TIME ZONE,
+	last_ip INET NULL,
+
 	-- Teacher email address for OAuth login.
 	-- TODO: Accounts, which might potentially need to be its own table.
 	-- If using OAuth, this may just be an email address
@@ -34,25 +38,6 @@ CREATE TABLE staff (
 );
 CREATE INDEX ON staff(name_first, name_last);
 CREATE INDEX ON staff(email);
-
-
-CREATE TABLE staff_session (
-    id VARCHAR NOT NULL,
-    staff_id INT NOT NULL,
-
-    created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    visited TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-
-    origin_ip INET NOT NULL,
-    last_ip INET NOT NULL,
-
-    PRIMARY KEY(id),
-    FOREIGN KEY(staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
-);
-COMMENT ON TABLE staff_session IS 'Used by the backend to track staff sessions (e.g. logins)';
-CREATE INDEX ON staff_session(created);
-CREATE INDEX ON staff_session(visited);
-
 
 
 CREATE TABLE location (
