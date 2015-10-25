@@ -208,6 +208,5 @@ def setup_schema():
             {'Meta': Meta}  # Members
         )
         setattr(class_, 'SchemaClass', schema_class)
-        print(repr(class_))
 
 configure_mappers()

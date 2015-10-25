@@ -22,8 +22,6 @@ _classes_to_init = set()
 def setup_all():
     for c in _classes_to_init:
         c.setup()
-        print(repr(c))
-        print(c.url_base)
     _classes_to_init.clear()
 
 

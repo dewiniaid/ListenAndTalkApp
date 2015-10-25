@@ -16,10 +16,6 @@ class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS): #, marshm
         if self.model is None:
             return
 
-        # if self.type_ == '' or self.type_ is None:
-        #     self.type_ = self.model.__name__.lower()
-        #     print(repr(self.type_))
-        #
         if not getattr(meta, 'writable_pk', False):
             # Add primary keys to dump_only
             self.dump_only += tuple(col.name for col in self.model.__table__.primary_key.columns)
