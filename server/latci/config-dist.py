@@ -3,6 +3,11 @@ Application configuration file.
 
 To use, rename this file from config-dist.py to config.py and fill in the appropriate fields.
 """
+# Prefix for API calls.  Ignore the 'v2'.
+API_PREFIX = "/api/"
+
+# Serve static files?  Disable this if it's being handled upstream.
+SERVE_STATIC_FILES = True
 
 # Path to connect to the database
 DATABASE_PATH = "postgres://username:password@host.example.com:5432/database"

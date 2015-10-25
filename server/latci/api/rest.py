@@ -10,6 +10,7 @@ from latci.auth import auth_wrapper
 import latci.misc
 import latci.api.errors as err
 import collections
+from latci import config
 
 import datetime
 
@@ -194,7 +195,7 @@ class RESTController(metaclass=RESTMeta):
     :ivar options: Dictionary of possible options.
     :ivar auth: Authentication session information
     """
-    url_prefix = '/api/v2/'
+    url_prefix = config.API_PREFIX + 'v2/'
     url_base = None
     url_instance = '<key:int>'
 

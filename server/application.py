@@ -9,39 +9,37 @@ import latci.json
 
 app = bottle.app()
 
-@route('/static/<path:path>')
-def serve_static_files(path):
-    return bottle.static_file(path, root='D:/git/listenandtalk/static/')
-
-
-@route('/dbtest')
-def dbtest(db):
-    print(repr(db))
-
-
-@route('/tokeninfo/<token>')
-def token_info(db, token):
-    import oauth2client.client
-    from oauth2client.crypt import AppIdentityError
-
-    print(repr(token))
-    idinfo = oauth2client.client.verify_id_token(token, config.OAUTH2_CLIENT_ID)
-    print(repr(idinfo))
-    return idinfo
-    if idinfo['aud'] != config.OAUTH2_CLIENT_ID:
-        raise AppIdentityError("Unrecognized client ID.")
-    if idinfo['iss'] not in config.OAUTH2_ISSUERS:
-        raise AppIdentityError("Invalid issuer.")
-    if config.OAUTH2_DOMAINS and idinfo['hd'] not in config.OAUTH2_DOMAINS:
-        raise AppIdentityError("Domain not authorized.")
-    if idinfo.get('exp', 0) < time.time():
-        raise AppIdentityError("Token is expired.")
-
-
 # Required for proper initialization of routes
 import latci.views
 import functools
+
+
+# This route conflicts with all other routes, and because of how bottle handles routes, it would always win if it was
+# looking for GET.  Making it look for ANY instead allows other routes to act first (assuming they're defined first)
+# and works around this behavior.  Yes, it's a kludge, but really whatever framework is serving us should be doing the
+# entire serving static files thing anyways.
+if config.SERVE_STATIC_FILES:
+    import inspect
+    import os
+    base_path = os.path.dirname(os.path.abspath(inspect.getframeinfo(inspect.currentframe()).filename))
+    static_path = os.path.abspath(base_path + "/../client")
+    @route('/', skip=True)
+    @route('/<path:path>', skip=True, method='ANY')
+    def serve_static_files(path=None):
+        if bottle.request.method not in('GET', 'HEAD'):
+            raise bottle.HTTPError(status=405, headers={'Allow': 'GET, HEAD'})
+        if path is None:
+            path = 'index.html'
+        return bottle.static_file(path, root='../client/')
+
+
+@route('/static/<path:path>', skip=True)
+def serve_static_files(path):
+    return bottle.static_file(path, root='../static/')
+
+
 runserver = functools.partial(bottle.run, host='0.0.0.0', port=8000, debug=True)
+
 
 def cli_shell():
     """
@@ -141,3 +139,4 @@ def main(argv):
 if __name__ == '__main__':
     import sys
     main(sys.argv)
+
