@@ -213,8 +213,8 @@ class AuthSession:
         # If we're still here, Google says they're a valid user.  Let's check the database to see if they exist.
         try:
             query = self.db.query(models.Staff).filter(models.Staff.date_inactive.is_(None))
-            if config.OAUTH2_DEBUG_STAFF_ID:
-                staff = query.filter(models.Staff.id == config.OAUTH2_DEBUG_STAFF_ID).one()
+            if config.DEBUG_LOGIN_AS:
+                staff = query.filter(models.Staff.id == config.DEBUG_LOGIN_AS).one()
             else:
                 staff = query.filter(models.Staff.email == email).one()
         except orm.exc.NoResultFound:
@@ -255,7 +255,7 @@ def auth_wrapper(required=True, keyword=None, attach_json=True, fn=None):
     :return:
     """
     def wrapper(fn):
-        if config.OAUTH2_DEBUG_NOLOGIN:
+        if config.DEBUG_SKIP_LOGIN:
             return fn
 
         @functools.wraps(fn)

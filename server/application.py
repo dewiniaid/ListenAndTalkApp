@@ -7,9 +7,9 @@ import latci.database
 from latci import config
 import latci.json
 
-app = bottle.app()
+application = bottle.app()
 
-# Required for proper initialization of routes
+# Required for proper initialization of routes.  Can't be before bottle.app() calls.
 import latci.views
 import functools
 
@@ -19,10 +19,6 @@ import functools
 # and works around this behavior.  Yes, it's a kludge, but really whatever framework is serving us should be doing the
 # entire serving static files thing anyways.
 if config.SERVE_STATIC_FILES:
-    import inspect
-    import os
-    base_path = os.path.dirname(os.path.abspath(inspect.getframeinfo(inspect.currentframe()).filename))
-    static_path = os.path.abspath(base_path + "/../client")
     @route('/', skip=True)
     @route('/<path:path>', skip=True, method='ANY')
     def serve_static_files(path=None):
@@ -30,7 +26,7 @@ if config.SERVE_STATIC_FILES:
             raise bottle.HTTPError(status=405, headers={'Allow': 'GET, HEAD'})
         if path is None:
             path = 'index.html'
-        return bottle.static_file(path, root='../client/')
+        return bottle.static_file(path, root=config.STATIC_FILES_PATH)
 
 
 @route('/static/<path:path>', skip=True)
