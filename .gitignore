@@ -20,3 +20,11 @@ __pycache__/
 
 # IDE crud
 .idea/*
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# 'Deploy' folder
+deploy/
