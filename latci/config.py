@@ -65,7 +65,7 @@ AUTH_REALM = 'latci'
 EXCEPTION_HANDLING = 'native'
 
 # Where static files are located
-STATIC_FILES_PATH = os.path.abspath(os.path.join(_our_path, "../../client"))
+STATIC_FILES_PATH = os.path.abspath(os.path.join(_our_path, "../client"))
 
 def coerce_bool(v):
     if not isinstance(v, str):
@@ -131,7 +131,11 @@ def _parse(attr, coerce, key=None):
     if key is None: key = attr
     value = os.environ.get(key)
     if value is None and parser is not None:
-        value = parser.get('server', key)
+        try:
+            value = parser.get('server', key)
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            value = None
+
     if value is None:
         if attr not in g:
             raise ValueError("Setting {} is not configured and has no default value.".format(attr))

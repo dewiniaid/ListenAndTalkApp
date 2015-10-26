@@ -6,7 +6,10 @@ import sys
 import functools
 import re
 
-BUILD_INCLUDES = "+/server/;+/client/;-__pycache__;-.*;-*.py[cod];-server.ini;+/.ebextensions/"
+BUILD_INCLUDES = (
+    "/application.py;/requirements.txt;+/latci/;+/client/;"
+    "-__pycache__;-.*;-*.py[cod];-server.ini;+/.ebextensions/"
+)
 
 # Setup defaults
 def which(executable):
@@ -49,13 +52,11 @@ def cmd_build(file, ini_override='deploy/server.ini', verbose=False):
             pattern += '/'
         yield op, pattern + '**/*'
 
-    for op, pattern in compile_pattern(
-            "+/server/;+/client/;-__pycache__;-.*;-*.py[cod];-server.ini;+/.ebextensions/;"
-    ):
+    for op, pattern in compile_pattern(BUILD_INCLUDES):
         files = op(files, set(root.glob(pattern)))
 
     print("Adding {} files to {}".format(len(files), file))
-    with zipfile.ZipFile(file, mode='w') as zip:
+    with zipfile.ZipFile(file, mode='w', compression=zipfile.ZIP_DEFLATED) as zip:
         for path in sorted(files):
             relname = path.relative_to(root).as_posix()
             if verbose: print(relname)
