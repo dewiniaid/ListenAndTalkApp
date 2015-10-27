@@ -5,17 +5,126 @@ import operator
 import sys
 import functools
 import re
+import subprocess
+import os
+import shlex
 
+
+# Setup defaults
 BUILD_INCLUDES = (
     "/application.py;/requirements.txt;+/latci/;+/client/;"
     "-__pycache__;-.*;-*.py[cod];-server.ini;+/.ebextensions/"
 )
 
-# Setup defaults
-def which(executable):
-    """Cheap imitation version of 'which', based off of distutils.spawn.find_executable."""
-    import distutils.spawn
-    return distutils.spawn.find_executable(executable)
+def _verbose_exec(cmd, *a, _fn, **kw):
+    import shlex
+    print("# running: ", " ".join(shlex.quote(arg) for arg in cmd))
+    _fn(cmd, *a, **kw)
+check_call = functools.partial(_verbose_exec, _fn=subprocess.check_call)
+check_output = functools.partial(_verbose_exec, _fn=subprocess.check_output)
+
+std_passthru = {"stdout": sys.stdout, "stderr": sys.stderr}
+
+
+def which(name, _paths=os.environ["PATH"].split(os.pathsep), _exts=os.environ.get("PATHEXT", "").split(os.pathsep)):
+    """Cheap imitation version of 'which'"""
+    names = [name + x for x in _exts]
+    for path in _paths:
+        try:
+            if not os.path.exists(path):
+                continue
+            for name in [os.path.join(path, name) for name in names]:
+                try:
+                    if os.access(name, os.X_OK):
+                        return name
+                except:
+                    pass
+        except:
+            pass
+    return None
+
+
+def cmd_setup_client(npm=None, grunt=None, bower=None):
+    npm = npm or which('npm')
+    grunt = grunt or which('grunt')
+    bower = bower or which('bower')
+
+    if not npm:
+        print("*** Couldn't determine path to npm.")
+        sys.exit(1)
+    else:
+        if not grunt:
+            check_call([npm, 'install', '-g', 'grunt-cli'], **std_passthru)
+        if not bower:
+            check_call([npm, 'install', '-g', 'bower'], **std_passthru)
+        check_call([npm, 'install'], **std_passthru)
+
+
+def cmd_setup_server(path='venv', use_current=False):
+    import pathlib
+
+    clear_env_var = False
+    try:
+        # Check to see if we're in a virtual environment already
+        if sys.base_prefix != sys.prefix or sys.exec_prefix != sys.base_exec_prefix or os.environ.get('VIRTUAL_ENV'):
+            # Yes.
+            if not use_current:
+                print("I won't install packages while running within a virtual environment without the --use-current"
+                      " option.")
+                sys.exit(1)
+            pip = which('pip')
+            easy_install = which('easy_install')
+            if not pip:
+                print("*** Couldn't determine path to pip.")
+                sys.exit(1)
+            if not easy_install:
+                print("*** Couldn't determine path to easy_install.")
+                sys.exit(1)
+        else:
+            # Check to see if a venv exists
+            pathobj = pathlib.Path(path)
+
+            create = True
+            if pathobj.exists():
+                if len(list(pathobj.glob("**/site-packages"))):
+                    print("Virtual environment appears to already exist, not creating a new one.")
+                    create = False
+                elif len(list(pathobj.glob("*"))):
+                    print("Won't create virtual environment at {path}: Directory exists and is not empty"
+                          .format(path))
+                    sys.exit(1)
+
+            import venv
+            builder = venv.EnvBuilder(with_pip=True)
+            if create:
+                print("Creating virtual environment '{}'".format(path))
+                builder.create(path)
+            context = builder.ensure_directories(path)
+            clear_env_var = True
+            os.environ['VIRTUAL_ENV'] = context.env_dir
+            pip = os.path.join(context.bin_path, 'pip')
+            easy_install = os.path.join(context.bin_path, 'easy_install')
+    finally:
+        if clear_env_var:
+            del os.environ['VIRTUAL_ENV']
+
+    # Package installation.
+    if sys.platform == 'win32':  # Yes, even on x64 it's called win32.
+        print("*** You appear to be running on Windows.  Thus, it's highly likely this next\n"
+              "*** command will fail.  Don't worry if it does, we'll take care of it.")
+        try:
+            check_call([pip, 'install', 'psycopg2'])
+        except subprocess.CalledProcessError:
+            url = "http://www.stickpeople.com/projects/python/win-psycopg/2.6.1/psycopg2-2.6.1.{arch}-py{major}.{minor}-pg9.4.4-release.exe"
+            # Seriously, the docs suggest this to see if we're on a 64-bit platform.
+            # https://docs.python.org/3/library/platform.html#module-platform
+            arch = 'win-amd64' if sys.maxsize > 2**32 else 'win32'
+            major, minor = sys.version_info[:2]
+            if (major, minor) not in ((2,6), (2,7), (3,2), (3,3), (3,4)):
+                print("*** I don't think there's a prebuilt psycopg2 package for this Python version.\n"
+                      "*** Trying anyways...")
+            check_call([easy_install, url.format(arch=arch, major=major, minor=minor)], **std_passthru)
+    check_call([pip, 'install', '-r', 'requirements.txt'])
 
 
 def cmd_build(file, ini_override='deploy/server.ini', verbose=False):
@@ -90,7 +199,7 @@ def cmd_deploy(eb, environment, label, message):
     if environment: args.append(environment)
     args += ['-l', label, '-m', message]
 
-    subprocess.check_call(args, stdout=sys.stdout, stderr=sys.stderr)
+    subprocess.check_call(args, **std_passthru)
 
 
 # build_zip('test.zip')
@@ -116,8 +225,11 @@ parser = argparse.ArgumentParser(
         "  At least one of the -B, -D, and -C parameters is required."
     )
 )
-
 group = parser.add_argument_group(title='Actions')
+group.add_argument(
+    '-S, --setup', action='append_const', const='setup', dest='actions',
+    help='Initialize development environment and report any problems.  Builds a virtual environment and sets up packages.'
+)
 group.add_argument(
     '-B, --build', action='append_const', const='build', dest='actions',
     help='Build new artifact.'
@@ -129,6 +241,32 @@ group.add_argument(
 group.add_argument(
     '-C, --configure', nargs=1, metavar='FILE', dest='configure',
     help='Configures environment variables on an existing EBS instance using the [environment] section of FILE'
+)
+
+group = parser.add_argument_group(title='Settings for use with --setup')
+mex = group.add_mutually_exclusive_group()
+mex.add_argument(
+    '--client-only', action='store_const', const=True, dest='skip_server', help='Skip server-side setup actions.'
+)
+mex.add_argument(
+    '--server-only', action='store_const', const=True, dest='skip_client', help='Skip client-side setup actions.'
+)
+group.add_argument(
+    '--with-npm', nargs=1, metavar='NPM', dest='with_npm', help='Specifies location of npm.'
+)
+group.add_argument(
+    '--with-grunt', nargs=1, metavar='GRUNT', dest='with_grunt', help='Specifies location of grunt.'
+)
+group.add_argument(
+    '--with-bower', nargs=1, metavar='BOWER', dest='with_bower', help='Specifies location of bower.'
+)
+group.add_argument(
+    '--venv-path', nargs=1, metavar='VENV', dest='venv_path', help='Path to virtual environment to build.',
+    default='venv'
+)
+group.add_argument(
+    '--use-current', action='store_const', const=True, dest='venv_use_current',
+    help="Install to the current virtual environment (if we're in one)"
 )
 
 group = parser.add_argument_group(title='Settings for use with --build')
@@ -177,8 +315,14 @@ if args.configure:
 args.actions = set(args.actions)
 
 if not args.actions:
-    print("You must specify at least one of the -B, -D and -C options.")
+    print("You must specify at least one of the [-B, -C, -D, -S] options.")
     sys.exit(1)
+
+if 'setup' in args.actions:
+    if not args.skip_client:
+        cmd_setup_client(npm=args.with_npm, bower=args.with_bower, grunt=args.with_grunt)
+    if not args.skip_server:
+        cmd_setup_server(path=args.venv_path, use_current=args.venv_use_current)
 
 if 'deploy' in args.actions:
     if not args.skip_build:
@@ -189,3 +333,6 @@ if 'build' in args.actions:
 
 if 'deploy' in args.actions:
     cmd_deploy(args.eb, args.environment, args.label, args.message)
+
+if 'initialize' in args.actions:
+    cmd_initialize(args.eb, args.environment, args.label, args.message)
