@@ -5,6 +5,7 @@ vendor/
 
 # Ignore the server-venv directory (work dir for virtualenv)
 server-venv/
+venv/
 
 # Don't allow the config file with database passwords to hit the repository
 server.ini
