@@ -227,19 +227,19 @@ parser = argparse.ArgumentParser(
 )
 group = parser.add_argument_group(title='Actions')
 group.add_argument(
-    '-S, --setup', action='append_const', const='setup', dest='actions',
+    '-S', '--setup', action='append_const', const='setup', dest='actions',
     help='Initialize development environment and report any problems.  Builds a virtual environment and sets up packages.'
 )
 group.add_argument(
-    '-B, --build', action='append_const', const='build', dest='actions',
+    '-B', '--build', action='append_const', const='build', dest='actions',
     help='Build new artifact.'
 )
 group.add_argument(
-    '-D, --deploy', action='append_const', const='deploy', dest='actions',
+    '-D', '--deploy', action='append_const', const='deploy', dest='actions',
     help='Deploy an artifact.'
 )
 group.add_argument(
-    '-C, --configure', nargs=1, metavar='FILE', dest='configure',
+    '-C', '--configure', nargs=1, metavar='FILE', dest='configure',
     help='Configures environment variables on an existing EBS instance using the [environment] section of FILE'
 )
 
@@ -262,7 +262,7 @@ group.add_argument(
 )
 group.add_argument(
     '--venv-path', nargs=1, metavar='VENV', dest='venv_path', help='Path to virtual environment to build.',
-    default='venv'
+    default=['venv']
 )
 group.add_argument(
     '--use-current', action='store_const', const=True, dest='venv_use_current',
@@ -278,7 +278,7 @@ group.add_argument(
     )
 )
 group.add_argument(
-    '-c, --server-ini', nargs=1, default=['deploy/server.ini'], metavar='FILE', dest='server_ini',
+    '-c', '--server-ini', nargs=1, default=['deploy/server.ini'], metavar='FILE', dest='server_ini',
     help="Location of server INI file to include in the build artifact."
 )
 group.add_argument(
@@ -287,7 +287,7 @@ group.add_argument(
 )
 group = parser.add_argument_group(title='Settings for use with --deploy and --configure')
 group.add_argument(
-    '-e, --environment', nargs=1, metavar='ENVIRONMENT', dest='environment',
+    '-e', '--environment', nargs=1, metavar='ENVIRONMENT', dest='environment',
     help="Name of the Elastic Beanstalk environment to use.  If omitted, uses the default as determined by 'eb use'."
 )
 group.add_argument(
@@ -318,21 +318,21 @@ if not args.actions:
     print("You must specify at least one of the [-B, -C, -D, -S] options.")
     sys.exit(1)
 
+def delist(arg):
+    return arg[0] if arg else None
+
 if 'setup' in args.actions:
     if not args.skip_client:
-        cmd_setup_client(npm=args.with_npm, bower=args.with_bower, grunt=args.with_grunt)
+        cmd_setup_client(npm=delist(args.with_npm), bower=delist(args.with_bower), grunt=delist(args.with_grunt))
     if not args.skip_server:
-        cmd_setup_server(path=args.venv_path, use_current=args.venv_use_current)
+        cmd_setup_server(path=delist(args.venv_path), use_current=args.venv_use_current)
 
 if 'deploy' in args.actions:
     if not args.skip_build:
         args.actions.add('build')
 
 if 'build' in args.actions:
-    cmd_build(args.artifact, args.server_ini[0], verbose=args.list_files)
+    cmd_build(delist(args.artifact), delist(args.server_ini), verbose=args.list_files)
 
 if 'deploy' in args.actions:
-    cmd_deploy(args.eb, args.environment, args.label, args.message)
-
-if 'initialize' in args.actions:
-    cmd_initialize(args.eb, args.environment, args.label, args.message)
+    cmd_deploy(delist(args.eb), delist(args.environment), delist(args.label), delist(args.message))
