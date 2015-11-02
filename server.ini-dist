@@ -3,6 +3,12 @@
 # Prefix for API calls.  Ignore the 'v2'.
 API_PREFIX = /api/
 
+# Allowed origin(s) that can access the API via CORS
+# Comma separated list.  No wildcards permitted.  Ports must be named explicitly.
+# '*' allows ALL origins, and should NOT be used in production.  If no origins are specified, the header will not be
+# set.
+# API_ALLOWED_ORIGIN =
+
 # Serve static files?  Disable this if it's being handled upstream.
 SERVE_STATIC_FILES = True
 

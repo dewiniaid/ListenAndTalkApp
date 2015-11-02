@@ -8,9 +8,30 @@ import functools
 from latci import config
 import latci.json
 
+def cors_plugin(callback, default_origin, allowed_origins):
+    def wrapper(*args, **kwargs):
+        if 'origin' in bottle.request.headers:
+            if '*' in allowed_origins:
+                origin = '*'
+            elif bottle.request.headers['origin'] in allowed_origins:
+                origin = bottle.request.headers['origin']
+            else:
+                origin = default_origin
+            bottle.response.headers['Access-Control-Allow-Origin'] = origin
+        return callback(*args, **kwargs)
+    return wrapper
+
+
 application = bottle.app()
 application.uninstall(bottle.JSONPlugin)
 application.install(bottle.JSONPlugin(json_dumps=functools.partial(latci.json.dumps, indent=True)))
+
+if config.API_ALLOWED_ORIGIN:
+    application.install(functools.partial(
+        cors_plugin,
+        default_origin=config.API_ALLOWED_ORIGIN[0], allowed_origins=set(config.API_ALLOWED_ORIGIN))
+    )
+
 
 # Install SQLAlchemy plguin
 application.install(

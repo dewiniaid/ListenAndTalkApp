@@ -16,6 +16,9 @@ _our_path = os.path.dirname(os.path.abspath(inspect.getframeinfo(inspect.current
 # Prefix for API calls.  Ignore the 'v2'.
 API_PREFIX = "/api/"
 
+# Access-Control-Allow-Origin header override.  If empty, override will be unavailable.
+API_ALLOWED_ORIGIN = []
+
 # Serve static files?  Disable this if it's being handled upstream.
 SERVE_STATIC_FILES = False
 
@@ -90,6 +93,7 @@ coerce_domainset = functools.partial(coerce_domainlist, cast=set)
 # If key is omitted, it is the same as attribute.
 options = [
     ('API_PREFIX', str),
+    ('API_ALLOWED_ORIGIN', coerce_domainlist),
     ('SERVE_STATIC_FILES', coerce_bool),
 
     ('DATABASE_PATH', str),
