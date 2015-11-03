@@ -280,7 +280,7 @@ class RESTController(metaclass=RESTMeta):
         json = bottle.request.query.get('options', None)
         if json is not None:
             try:
-                query_options = latci.json.loads(options)
+                query_options = latci.json.loads(json)
             except Exception:
                 raise err.JSONValidationError("Error in parsing options parameter.")
             if not is_dict(query_options):
@@ -428,16 +428,18 @@ class RESTController(metaclass=RESTMeta):
         if cls.manager is None and cls.create_manager is not None:
             cls.manager = cls.create_manager()
 
-    def __init__(self, db, options, method, ref, data, params, auth=None):
+    def __init__(self, db, options, method, ref, data, params, auth=None, root=None):
         """
         Handles per-request setup tasks.
 
         :param db: Database session
         :param options: Options dictionary
+        :param method: Request method
+        :param data: Request JSON data (the 'data' dict in particular)
+        :param params: Request route parameters
         :param auth: Authentication information.
-        :return:
+        :param root: The root instance of RESTController (in case of recursive dispatch)
         """
-        self.errors = []
         self.db = db
         self.auth = auth
         self.options = options
@@ -448,6 +450,16 @@ class RESTController(metaclass=RESTMeta):
         self.schema = self.get_schema()
         self.schema.session = self.db
         self.cache = InstanceCache(query_factory=self.query, reference_factory=self.manager)
+        if root:
+            self.root = root
+            self.processed = root.processed
+            self.related = root.related
+            self.errors = root.errors
+        else:
+            self.root = self
+            self.processed = set()
+            self.related = set()
+            self.errors = []
 
     def get_schema(self):
         """
@@ -502,7 +514,7 @@ class RESTController(metaclass=RESTMeta):
         if query is None:
             query = self.query(ref)
 
-        if not ref:
+        if not ref or is_list(ref):
             limit = self.options.get('limit')
             offset = self.options.get('offset')
             if limit is not None:
@@ -523,7 +535,7 @@ class RESTController(metaclass=RESTMeta):
         Called for GET requests.
         """
         query = self.get_query(self.ref)
-        if self.ref:
+        if self.ref and not is_list(self.ref):
             try:
                 result = query.one()
             except orm.exc.NoResultFound:
@@ -549,7 +561,7 @@ class RESTController(metaclass=RESTMeta):
         if not data:
             raise err.NotFoundError()
         self.db.commit()
-        if self.ref:
+        if self.ref and not is_list(self.ref):
             return {'data': data[0]}
         else:
             return {'data': data}
@@ -596,6 +608,8 @@ class RESTController(metaclass=RESTMeta):
             ref = item['ref']
             value = item['value']
 
+            # Earlier validation should have ensured that at least one of ref or value are set, so we don't check
+            # here
             if ref:
                 try:
                     instance = self.cache[ref]
@@ -637,6 +651,17 @@ class RESTController(metaclass=RESTMeta):
             return rv[0]
         return rv
 
+    def transform_out(self, ref, instance, value):
+        """
+        Transforms output from process_out.  Convenience method for subclasses.
+
+        :param ref: Reference
+        :param instance: Instance
+        :param value: non-transformed value
+        :return: Transformed value.
+        """
+        return value
+
     def process_out(self, instance=None, ref=None, defer=False):
         """
         Formats data for JSON output.  Returns a dictionary or other serializable object.
@@ -661,10 +686,15 @@ class RESTController(metaclass=RESTMeta):
             return Deferred.partial(self.process_out, instance, ref, defer=False)
         if ref is None:
             ref = self.manager.from_model(instance)
+        if ref in self.processed:
+            raise ValueError('Reference {} already processed for output multiple times.')
+        self.processed.add(ref)
         if instance is None:
             value = None
         else:
             value = self.schema.dump(instance).data
+            value = self.transform_out(ref, instance, value)
+
         return ref.to_dict({'value': value})
 
     def process_in(self, value, instance):
@@ -676,7 +706,7 @@ class RESTController(metaclass=RESTMeta):
         """
         result = self.schema.load(value, instance=instance)
         if result.errors:
-            self.errors.append(err.ValidationError(ref=ref))
+            raise err.ValidationError()
 
     def undefer(self, results):
         """

@@ -80,6 +80,9 @@ class AbstractReference(metaclass=ABCMeta):
         if isinstance(other, AbstractReference):
             return other.manager.typename == self.manager.typename and other.to_key() == self.to_key()
 
+    def __hash__(self):
+        return hash(self.manager.typename) ^ hash(self.to_key())
+
 
 class ScalarReference(AbstractReference):
     """
@@ -123,29 +126,37 @@ class ScalarReference(AbstractReference):
         return getattr(cls.manager.modelclass, cls.manager.column).in_(item.value for item in refs)
 
 
-class ScalarReferenceManager:
-    """Handles references."""
-    def __init__(self, modelclass, typename, makeurl, column=None):
-        """
-        Handles converting and generating reference objects.
-
-        :param modelclass: ORM Object Class
-        :param typename: Unique type name.
-        :param makeurl: URL format string or callback
-        :param column: Database column name.  Autodetected if none.
-        """
-        if column is None:
-            pk = sa.inspect(modelclass).primary_key
-            if not pk or len(pk) != 1:
-                raise ValueError("Primary key must have exactly 1 column for this ReferenceManager.")
-            column = pk[0].key
-
-        self.column = column
+class BaseReferenceManager:
+    def __init__(self, modelclass, typename, makeurl, controller, *a, **kw):
         self.modelclass = modelclass
         self.typename = typename
         self.makeurl = makeurl
-        self.factory = type(typename + 'Reference', (ScalarReference,), {'manager': self})
+        self.controller = controller
 
+        if hasattr(self, 'factory'):
+            self._undefer()
+        else:
+            def deferral(method):
+                def deferred(*a, **kw):
+                    self._undefer()
+                    fn = getattr(self.factory, method)
+                    return fn(*a, **kw)
+                setattr(self, method, deferred)
+
+            for method in 'from_model', 'from_key', 'from_dict', 'sql_in':
+                deferral(method)
+
+    #
+    # def from_model(self, model): return self.factory.from_model(model)
+    #
+    # def from_key(self, key): return self.factory.from_key(key)
+    #
+    # def from_dict(self, d): return self.factory.from_dict(d)
+    #
+    # def sql_in(self, refs): return self.factory.sql_in(refs)
+
+    def _undefer(self):
+        print("{0!r} is no longer deferred.".format(self))
         for method in 'from_model', 'from_key', 'from_dict', 'sql_in':
             setattr(self, method, getattr(self.factory, method))
 
@@ -159,5 +170,31 @@ class ScalarReferenceManager:
             controller.model,
             controller.name,
             controller.url_base + "/{}",
+            controller,
             *a, **kw
         )
+
+    def __repr__(self):
+        return "<{0.__class__.__name__}({0.modelclass!r}, {0.typename!r}, ...)>".format(self)
+
+
+class ScalarReferenceManager(BaseReferenceManager):
+    """Handles references."""
+    def __init__(self, modelclass, typename, makeurl, controller=None, column=None):
+        """
+        Handles converting and generating reference objects.
+
+        :param modelclass: ORM Object Class
+        :param typename: Unique type name.
+        :param makeurl: URL format string or callback
+        :param column: Database column name.  Autodetected if none.
+        """
+        super().__init__(modelclass, typename, makeurl, controller)
+
+        if column is None:
+            pk = sa.inspect(modelclass).primary_key
+            if not pk or len(pk) != 1:
+                raise ValueError("Primary key must have exactly 1 column for this ReferenceManager.")
+            column = pk[0].key
+        self.column = column
+        self.factory = type(typename + 'Reference', (ScalarReference,), {'manager': self})

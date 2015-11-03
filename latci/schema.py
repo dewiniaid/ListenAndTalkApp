@@ -8,6 +8,8 @@ It might be neccessary to make a separate version 3 schema of this at some point
 backwards-incompatible changes.
 """
 import marshmallow_sqlalchemy
+import marshmallow
+import sqlalchemy
 
 
 class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS): #, marshmallow_jsonapi.Schema.OPTIONS_CLASS):
@@ -24,11 +26,11 @@ class SchemaOptions(marshmallow_sqlalchemy.ModelSchema.OPTIONS_CLASS): #, marshm
 # noinspection PyAbstractClass
 class Schema(marshmallow_sqlalchemy.ModelSchema): #, marshmallow_jsonapi.Schema):
     OPTIONS_CLASS = SchemaOptions
-    # @marshmallow.pre_dump
-    # def data_filter(self, obj):
-    #     unloaded = sqlalchemy.inspect(obj).unloaded
-    #     rv = {
-    #         attr: getattr(obj, attr) for attr in self.fields.keys() if attr not in unloaded
-    #     }
-    #     return dict(rv)
 
+    @marshmallow.pre_dump
+    def data_filter(self, obj):
+        unloaded = sqlalchemy.inspect(obj).unloaded
+        rv = {
+            attr: getattr(obj, attr) for attr in self.fields.keys() if attr not in unloaded
+        }
+        return dict(rv)

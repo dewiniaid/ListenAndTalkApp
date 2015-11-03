@@ -1,6 +1,7 @@
 from latci.api import rest
 from latci.database import models
 from latci.api.references import ScalarReferenceManager
+from sqlalchemy import sql, orm
 
 
 class SimpleIDRestController(rest.RESTController):
@@ -76,11 +77,45 @@ class ActivityRestController(SimpleIDRestController, rest.SortableRESTController
     treat_put_as_patch = True
     sortable_columns = {v: [v] for v in ('start_date', 'end_date', 'name')}  # TODO: Make more useful.
 
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self.options['related'] = set(self.options.get('related', ['staff']))
+
+    def query(self, ref=None, from_refresh=False):
+        return super().query(ref, from_refresh).options(orm.lazyload('*'))
+
+    def __call__(self):
+        rv = super().__call__()
+        if self is not self.root:
+            return rv
+
+        while self.related and not self.errors:
+            self.related -= self.processed
+            if not self.related:
+                break
+            refs_by_type = {}
+            for ref in self.related:
+                refs_by_type.setdefault(ref.manager.controller, set()).add(ref)
+            for controller, refs in refs_by_type.items():
+                refs = list(refs)
+                c = controller(db=self.db, options={}, method='GET', ref=refs, data=None, params=None, auth=self.auth, root=self)
+                result = c()
+                rv.setdefault('related', []).extend(result['data'])
+                self.processed.update(refs)
+
+        return rv
+
+    # def transform_out(self, ref, instance, value):
+    #     ref = StaffRestController.manager.from_key(instance.staff_id)
+    #     value['staff'] = StaffRestController.manager.from_key(instance.staff_id).to_dict()
+    #     if 'staff' in self.options['related']:
+    #         self.related.add(ref)
+    #     return value
+    #
     def get_schema(self):
         return self.SchemaClass(
-            exclude=('id', 'enrollment', 'staff', 'location', 'category'),
+            exclude=('id'),
             dump_only=('date_inactive', 'date_created')
         )
-
 
 rest.setup_all()
