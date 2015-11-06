@@ -271,7 +271,7 @@ group.add_argument(
 
 group = parser.add_argument_group(title='Settings for use with --build')
 group.add_argument(
-    '--artifact', nargs=1, default='deploy/artifact.zip', metavar='FILE', dest='artifact',
+    '--artifact', nargs=1, default=['deploy/artifact.zip'], metavar='FILE', dest='artifact',
     help=(
         "Where the build artifact should be located.  WARNING: If changing this, it will be necessary to change"
         " settings in .elasticbeanstalk\config.yml to match."
