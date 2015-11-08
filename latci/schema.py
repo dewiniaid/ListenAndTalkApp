@@ -124,7 +124,7 @@ class Related(marshmallow.fields.Nested):
         loaded = attr not in inspect(obj).unloaded
         if self.many:
             rv = {
-                '_type': schema.Meta.translate.typename,
+                '_type': schema.opts.translate.typename,
                 '_link': self.relation_url(attr, obj),
                 '_items': None
             }
@@ -136,8 +136,8 @@ class Related(marshmallow.fields.Nested):
             return super()._serialize(getattr(obj, attr), attr, obj)
         else:
             return {
-                '_type': schema.Meta.translate.typename,
-                '_link': schema.Meta.translate.url_for(obj, self.remap, strict=self.remap_strict)
+                '_type': schema.opts.translate.typename,
+                '_link': schema.opts.translate.url_for(obj, self.remap, strict=self.remap_strict)
             }
 
     def serialize(self, attr, obj, accessor=None):
@@ -175,7 +175,7 @@ class Related(marshmallow.fields.Nested):
         suffix = info.get('suffix')
         if suffix is None:
             suffix = attr
-        return self.parent.Meta.translate.url_for(obj) + "/" + suffix
+        return self.parent.opts.translate.url_for(obj) + "/" + suffix
 
 
 class URLTranslator:
@@ -384,15 +384,19 @@ class SchemaOptions(marshmallow_sqlalchemy.schema.ModelSchema.OPTIONS_CLASS):
         if self.model is None:
             return
 
-        pk = self.model.__table__.primary_key.columns
+        self.pk = self.model.__table__.primary_key.columns
+        self.writable_pk = getattr(meta, 'writable_pk', False)
+        self.include_pk = getattr(meta, 'include_pk', False)
+        if not self.writable_pk:
+            if not self.include_pk:
+                self.exclude += tuple(col.name for col in self.pk)
+            else:
+                self.dump_only += tuple(col.name for col in self.pk)
+        self.dump_only += ('_link', '_type')
 
-        if not getattr(meta, 'writable_pk', False):
-            # Add primary keys to dump_only
-            # self.dump_only += tuple(col.name for col in pk)
-            self.exclude += tuple(col.name for col in pk)
-
-        if not hasattr(meta, 'translate'):
-            setattr(meta, 'translate', URLTranslator.from_mapper(self.model))
+        self.translate = getattr(meta, 'translate', None)
+        if self.translate is None:
+            self.translate = URLTranslator.from_mapper(self.model)
 
 
 class SchemaMeta(marshmallow_sqlalchemy.schema.ModelSchemaMeta):
@@ -409,6 +413,8 @@ class SchemaMeta(marshmallow_sqlalchemy.schema.ModelSchemaMeta):
                     continue
                 if hasattr(prop, 'direction'):
                     fields[prop.key] = Related(prop)
+            fields['_link'] = marshmallow.fields.Function(lambda obj: opts.translate.url_for(obj))
+            fields['_type'] = marshmallow.fields.Constant(opts.translate.typename)
         return fields
 
 
@@ -481,7 +487,7 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
         """
         Forwards to self.state.cache
         """
-        return self.state.cache(obj, self.Meta.translate.fields)
+        return self.state.cache(obj, self.opts.translate.fields)
 
     def __init__(self, *args, **kwargs):
         """
@@ -489,13 +495,13 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
 
         :param state: If specified, determines the SchemaState we have.
         :param catalog: If specified, determines the initial catalog.  Ignored if 'state' is present.
-        :param path: If specified, determines the root path name.  Defaults to self.Meta.translate.typename.
+        :param path: If specified, determines the root path name.  Defaults to self.opts.translate.typename.
         """
         super().__init__(*args, **kwargs)
         self.state = kwargs.pop('state', None)
         if self.state is None:
             self.state = SchemaState(catalog=kwargs.pop('catalog', None))
-        self.path = kwargs.pop('path', self.Meta.translate.typename)
+        self.path = kwargs.pop('path', self.opts.translate.typename)
 
     def dump(self, obj, many=None, *args, **kwargs):
         """
@@ -505,24 +511,6 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
         if not many:
             return super().dump(self.cache(obj), many, *args, **kwargs)
         return super().dump([self.cache(o) for o in obj], many, *args, **kwargs)
-
-    @marshmallow.post_dump(pass_many=True, pass_original=True)
-    def add_identifier(self, output, many, original):
-        """
-        Add _type and _link to output.
-        :param output:
-        :param many:
-        :param original:
-        :return:
-        """
-        if not many:
-            output['_type'] = self.Meta.translate.typename
-            output['_link'] = self.Meta.translate.url_for(original)
-        else:
-            for itemoutput, itemoriginal in zip(output, original):
-                itemoutput['_type'] = self.Meta.translate.typename
-                itemoutput['_link'] = self.Meta.translate.url_for(itemoriginal)
-        return output
 
     # def load(self, data, session=None, instance=None, *args, **kwargs):
     #     """Deserialize data to internal representation.
@@ -549,7 +537,7 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
 # If not uselist:
 # We should have the full primary key of the remote end, and know how to map it:
 # Generate URLs using:
-#   property.mapper.Meta.translate  # Remote side's URLTranslator
+#   property.mapper.opts.translate  # Remote side's URLTranslator
 #   remap = { remote.name: local.name for local, remote in property.local_remote_pairs }
 
 # If uselist:
