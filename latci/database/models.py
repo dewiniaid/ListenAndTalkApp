@@ -28,25 +28,6 @@ class Model():
     """
     Base class for all ORM Objects (which correspond to tables in the database.
     """
-    # Allow lazy evalaution of schema internal property.
-    @property
-    def schema(self):
-        if not hasattr(self, '_schema'):
-            setattr(self, '_schema', self.SchemaClass(instance=self))
-        return self._schema
-
-    def dump(self, *args, **kwargs):
-        return self.schema.dump(self, *args, **kwargs)
-
-    def dumps(self, *args, **kwargs):
-        return self.schema.dumps(self, *args, **kwargs)
-
-    def load(self, *args, **kwargs):
-        return self.schema.load(self, *args, **kwargs)
-
-    def loads(self, *args, **kwargs):
-        return self.schema.loads(self, *args, **kwargs)
-
     @declared_attr
     def __tablename__(cls):
         """
@@ -148,10 +129,10 @@ class ActivityEnrollment(Model):
 
 
 class Attendance(Model):
-    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
-    student_id = Column(Integer, ForeignKey('student.id'), nullable=False)
-    activity_id = Column(Integer, ForeignKey('activity.id'), nullable=False)
-    date = Column(Date, nullable=False)
+    # id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    student_id = Column(Integer, ForeignKey('student.id'), primary_key=True, nullable=False)
+    activity_id = Column(Integer, ForeignKey('activity.id'), primary_key=True, nullable=False)
+    date = Column(Date, primary_key=True, nullable=False)
     status_id = Column(Integer, ForeignKey('attendance_status.id'), nullable=False)
     comment = Column(Text, nullable=True)
     date_entered = Column(DateTime(timezone=True), nullable=False, default=sql.func.now())
@@ -163,10 +144,10 @@ class Attendance(Model):
 
 class AttendanceUpsert(Model):
     """Virtual table."""
-    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
-    student_id = Column(Integer, ForeignKey('student.id'), nullable=False)
-    activity_id = Column(Integer, ForeignKey('activity.id'), nullable=False)
-    date = Column(Date, nullable=False)
+    # id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    student_id = Column(Integer, ForeignKey('student.id'), primary_key=True, nullable=False)
+    activity_id = Column(Integer, ForeignKey('activity.id'), primary_key=True, nullable=False)
+    date = Column(Date, primary_key=True, nullable=False)
     status_id = Column(Integer, ForeignKey('attendance_status.id'), nullable=False)
     comment = Column(Text, nullable=True)
     date_entered = Column(DateTime(timezone=True), nullable=False, default=sql.func.now())
@@ -186,7 +167,7 @@ def setup_schema():
         if not hasattr(class_, '__tablename__'):
             continue  # Skip abstract classes that don't have an underlying table.
 
-        if hasattr(class_, 'SchemaClass'):
+        if hasattr(class_, 'Schema'):
             continue
 
         # if class_.__name__.endswith('Schema'):
@@ -201,12 +182,13 @@ def setup_schema():
         else:
             class Meta(meta_base):
                 model = class_
+        setattr(class_, 'Meta', object)
 
         schema_class = type(
             "{}Schema".format(class_.__name__),  # Name of new class
             (latci.schema.Schema,),  # Subclasses
             {'Meta': Meta}  # Members
         )
-        setattr(class_, 'SchemaClass', schema_class)
+        setattr(class_, 'Schema', schema_class)
 
 configure_mappers()

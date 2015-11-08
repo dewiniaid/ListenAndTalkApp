@@ -125,7 +125,7 @@ class AuthSession:
     :ivar session: Session attached to this result.
     :ivar error: Description of authentication error, if any.
     """
-    schema = models.Staff.SchemaClass(only=('email', 'name_first', 'name_last', 'id'))
+    schema = models.Staff.Schema(only=('email', 'name_first', 'name_last', 'id'))
 
     def __json__(self):
         rv = {
