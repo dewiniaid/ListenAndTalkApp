@@ -46,10 +46,6 @@ class Model():
             c.name: getattr(self, c.name) for c in self.__table__.columns
         }
 
-    @classmethod
-    def generate(cls, json):
-        return cls.SchemaClass().make_instance(json)
-
 
 class LookupTable():
     """
