@@ -13,7 +13,8 @@ import marshmallow
 import marshmallow.fields
 import marshmallow.utils
 import latci.config
-from sqlalchemy import inspect
+import operator
+from sqlalchemy import inspect, sql
 import operator
 
 __all__ = ['Related', 'URLTranslator', 'SchemaOptions', 'SchemaMeta', 'Schema', 'CachedInstance']
@@ -189,8 +190,8 @@ class URLTranslator:
 
     :ivar mapper: Mapper that we reference.
     :ivar typename: Typename, used by Schema for the _type attribute.
-    :ivar to_url: Function that converts a dictionary to a URL fragment.
-    :ivar from_url: Function that converts a URL fragment to a dictionary.
+    :ivar to_fragment: Function that converts a dictionary to a URL fragment.
+    :ivar from_fragment: Function that converts a URL fragment to a dictionary.
     :ivar prefix: URL prefix, which also identifies the entire collection rather than a single item.
     :ivar fields: Listing of all fields used by {to,from}_url.
 
@@ -201,13 +202,13 @@ class URLTranslator:
     time_format = "%H%M%S.%f"
     datetime_format = date_format + time_format
 
-    def __init__(self, mapper, to_url, from_url, fields, prefix=None, typename=None):
+    def __init__(self, mapper, to_key, from_key, fields, prefix=None, typename=None):
         """
         Creates a new URLTranslator.
 
         :param mapper: SQLAlchemy mapper for this type of object.
-        :param to_url: Function that receives {field: value} pairs and returns the key component for the URL.
-        :param from_url: Function that receives a key component and returns {field: value} pairs.
+        :param to_key: Function that receives {field: value} pairs and returns the key component for the URL.
+        :param from_key: Function that receives a key component and returns {field: value} pairs.
         :param fields: List of attributes we consider on target objects.  Used for remapping.
         :param prefix: Base URL to use.  Automatically configured if None
         :param typename: Typename.  Automatically configured if None.
@@ -219,10 +220,23 @@ class URLTranslator:
 
         self.mapper = mapper
         self.typename = typename
-        self.to_url = to_url
-        self.from_url = from_url
+        self.to_key = to_key
+        self.from_key = from_key
         self.prefix = prefix
         self.fields = fields
+
+    def _setprefix(self, value):
+        if value[-1] == '/':
+            value = value[:-1]
+        self._prefix = value
+        self._prefixslash = value + '/'
+
+    prefix = property(
+        fget=lambda self: self._prefix, fset=_setprefix, doc="The URL prefix to use, with no trailing slash."
+    )
+    prefixslash = property(
+        fget=lambda self: self._prefixslash, fset=_setprefix, doc="The URL prefix to use. Includes a trailing slash"
+    )
 
     @classmethod
     def from_mapper(cls, mapper, **kwargs):
@@ -231,7 +245,7 @@ class URLTranslator:
 
         :param mapper: SQLAlchemy mapper to inspect.
         :param **kwargs: Additional kwargs sent to __init__.
-            Should not include to_url, from_url, or fields.
+            Should not include to_key, from_url, or fields.
         """
         from datetime import date, time, datetime
         strptime = datetime.strptime
@@ -278,10 +292,10 @@ class URLTranslator:
             else:
                 raise ValueError("Type {!r} is not supported in primary key columns.", type_)
 
-        def to_url(x):
+        def to_key(x):
             return "-".join(f_to(x[field]) for field, f_to, f_from in mapping)
 
-        def from_url(x):
+        def from_key(x):
             chunks = x.split("-")
             if len(chunks) != len(mapping):
                 raise ValueError("Invalid URL fragment.")
@@ -290,7 +304,7 @@ class URLTranslator:
                 for chunk, (field, f_to, f_from) in zip(chunks, mapping)
             }
 
-        return cls(mapper, to_url=to_url, from_url=from_url, fields=fields, **kwargs)
+        return cls(mapper, to_key=to_key, from_key=from_key, fields=fields, **kwargs)
 
     def url_for(self, instance, remap=None, strict=True):
         """
@@ -298,12 +312,12 @@ class URLTranslator:
 
         :param instance: Instance to create URL from
         :param remap: If set, consists of a dictionary of attribute mappings. {from: to}.
-            When to_url() would call for the 'to' attribute, 'from' is provided instead.
+            When to_key() would call for the 'to' attribute, 'from' is provided instead.
         :param strict: If set and remap is non-None, fail if not all attributes are mapped.
-        :return: URL.
+        :return: Full URL.
         """
         if remap is None:
-            return self.prefix + "/" + self.to_url(
+            return self.prefixslash + self.to_key(
                 dict((attr, getattr(instance, attr)) for attr in self.fields)
             )
 
@@ -316,30 +330,68 @@ class URLTranslator:
                     )
                 )
 
-        return self.prefix + "/" + self.to_url(
+        return self.prefixslash + self.to_key(
             dict((attr, getattr(instance, remap.get(attr, attr))) for attr in self.fields)
         )
 
-    def instance_from(self, fragment):
+    def key_from_url(self, url):
         """
-        Returns an instance from a URL.
+        Returns just the key component from a full URL.
 
-        :param fragment: URL fragment.
+        :param url: URL to parse
+        :return: key
+        :raises: ValueError if the URL does not begin with self.prefixslash
         """
-        d = self.from_url(fragment)
+        if not url.startswith(self.prefixslash):
+            raise ValueError(
+                "URL {!r} does not belong to this translator (prefix={!r})"
+                .format(url, self.prefix)
+            )
+        return url[len(self.prefixslash):]
+
+    def from_url(self, url):
+        """
+        Analog to from_key, but reading a full URL.  Shortcut for from_key(key_from_url(url))
+        :param url: URL to parse
+        :return: Primary key dictionary.
+        """
+        return self.from_key(self.key_from_url(url))
+
+    def instance_from(self, url=None, key=None):
+        """
+        Returns an instance from a full URL or a key component.
+
+        :param url: Full URL
+        :param key: Key component.
+        :return: SQLAlchemy instance
+
+        It is an error to specify both key and url.
+        """
+        if (url is None) is not (key is None):
+            raise ValueError("Exactly one of 'url' or 'key' must be specified and non-None.")
+        if url is not None:
+            key = self.key_from_url(url)
+        d = self.from_key(key)
         instance = self.mapper()
         for attr, value in d.items():
             setattr(instance, attr, value)
         return instance
 
-    def pk_from(self, fragment):
+    def pk_from(self, url=None, key=None):
         """
-        Returns a primary key (suitable for Query.get()) from a URL
+        Returns a primary key tuple from a full URL or a key component.
 
-        :param fragment: URL fragment
-        :return: Primary key.
+        :param url: Full URL
+        :param key: Key component.
+        :return: Primary key tuple
+
+        It is an error to specify both key and url.
         """
-        d = self.from_url(fragment)
+        if (url is None) is not (key is None):
+            raise ValueError("Exactly one of 'url' or 'key' must be specified and non-None.")
+        if url is not None:
+            key = self.key_from_url(url)
+        d = self.from_key(key)
         pk = inspect(self.mapper).primary_key
         rv = []
         for col in pk:
@@ -348,6 +400,22 @@ class URLTranslator:
             return rv[0]
         return tuple(rv)
 
+    def expression_from(self, url=None, key=None):
+        """
+        Return an SQLAlchemy expression (e.g. 'id=2') from a full URL or a key component.
+        :param url: Full URL
+        :param key: Key component.
+        :return: Expression
+
+        It is an error to specify both key and url.
+        """
+        if (url is None) is not (key is None):
+            raise ValueError("Exactly one of 'url' or 'key' must be specified and non-None.")
+        if url is not None:
+            key = self.key_from_url(url)
+        d = self.from_key(key)
+        pk = inspect(self.mapper).primary_key
+        return sql.and_(col == d[col.name] for col in pk)
 
 class CachedInstance:
     """
@@ -511,6 +579,16 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
         if not many:
             return super().dump(self.cache(obj), many, *args, **kwargs)
         return super().dump([self.cache(o) for o in obj], many, *args, **kwargs)
+
+    def get_instance(self, data):
+        """Retrieve an existing record by link attribute."""
+        url = data.get('_link')
+        if url is None:
+            return None
+        return self.session.query(self.opts.model).filter(self.opts.translate.expression_from(url=url)).first()
+
+    def load(self, data, session=None, instance=None, *args, **kwargs):
+        return super().load(data, session, instance, *args, **kwargs)
 
     # def load(self, data, session=None, instance=None, *args, **kwargs):
     #     """Deserialize data to internal representation.
