@@ -1,11 +1,40 @@
 """
 JSON model description/definition using Marshmallow and friends.
 
-Note that this is largely duplication of latci.db.models, but as the project evolves this serves as a sort of
-compatibility layer between an evolving database schema and a fixed API version.
+This builds heavily upon Marshmallow_SQLAlchemy but adds some of our own serialization protocol as well, including
+replacing references with URLs, indirect references rather than duplicating data, and not always returning a collection.
 
-It might be necessary to make a separate version 3 schema of this at some point, particularly if making
-backwards-incompatible changes.
+A huge chunk of this relies on an options declaration mechanism that allow for a variety of behaviors to be configured.
+Options are 'scoped' in such a way where they may or may not apply to nested serializers.
+
+CONFIGURATION:
+
+The following options can be set on SchemaState using the scoping mechanisms available in this file:
+
+All defaulting to False:
+can_link: When this is related to another object, can the linkage be changed?
+can_merge: Can changes be merged into an instance of this object?
+can_create: Can we create new instances of this object?
+can_replace: Can we replace instances of this object?
+can_upsert: Can we upsert instances of this object?
+can_unlink: Can we unlink instances of this object?
+can_delete: Can we delete instances of this object?
+can_modify: if False, all above permissions are treated as False regardless of value.
+
+All defaulting to False:
+can_patch_collection: Can we patch a collection of this?
+can_replace_collection: Can we replace a collection of this?
+
+All defaulting to False for the /* scope, otherwise True.  All require the corresponding non-collection version to be
+True as well to take effect:
+can_collection_link
+can_collection_merge
+can_collection_create
+can_collection_replace
+can_collection_upsert
+can_collection_unlink
+can_collection_delete
+can_collection_modify
 """
 import marshmallow_sqlalchemy.schema
 import marshmallow_sqlalchemy.convert
@@ -15,9 +44,14 @@ import marshmallow.utils
 import latci.config
 import operator
 from sqlalchemy import inspect, sql
-import operator
+import collections
+import collections.abc
+import functools
 
-__all__ = ['Related', 'URLTranslator', 'SchemaOptions', 'SchemaMeta', 'Schema', 'CachedInstance']
+__all__ = ['Related', 'URLTranslator', 'SchemaOptions', 'SchemaMeta', 'Schema', 'CachedInstance',
+           'SchemaState', 'ScopedOption', 'Scope', 'SortedDict']
+_MISSING = object()
+_default = object()
 
 
 class Related(marshmallow.fields.Nested):
@@ -107,12 +141,6 @@ class Related(marshmallow.fields.Nested):
     def nested(self, value):
         self._nested = value
 
-    @property
-    def schema(self):
-        schema = super().schema
-        schema.adopt_parent(self.parent)
-        return schema
-
     def _serialize(self, nested_obj, attr, obj):
         """
         Create our own structure and potentially incorporate the output of our superclass into it.
@@ -120,26 +148,29 @@ class Related(marshmallow.fields.Nested):
         :param attr: Attribute name we're examining.
         :param obj: Object with the attribute (an instance from SQLAlchemy)
         :return: Serialized data.
+
+        Bugs: Probably doesn't work with NULL values, but this schema has no nullable foreign keys.
         """
         schema = self.schema
+        schema.adopt_parent(self.parent, attr)
         loaded = attr not in inspect(obj).unloaded
+        nested_obj = getattr(obj, attr) if loaded else None
         if self.many:
             rv = {
-                '_type': schema.opts.translate.typename,
+                '_type': schema.typename,
                 '_link': self.relation_url(attr, obj),
                 '_items': None
             }
             if loaded:
-                nested_obj = getattr(obj, attr)
                 rv['_items'] = super()._serialize(nested_obj, attr, obj)
             return rv
-        if loaded:
-            return super()._serialize(getattr(obj, attr), attr, obj)
-        else:
+        if nested_obj is None:
             return {
-                '_type': schema.opts.translate.typename,
-                '_link': schema.opts.translate.url_for(obj, self.remap, strict=self.remap_strict)
+                '_type': schema.typename,
+                '_link': None if loaded else schema.translate.url_for(obj, self.remap, strict=self.remap_strict)
             }
+        else:
+            return super()._serialize(nested_obj, attr, obj)
 
     def serialize(self, attr, obj, accessor=None):
         """
@@ -150,8 +181,9 @@ class Related(marshmallow.fields.Nested):
         :param obj: Object containing attribute
         :param accessor: Function to retrieve attribute.
         :return: Serialized data.
-        """
 
+        Bugs: Probably doesn't work with NULL values, but this schema has no nullable foreign keys.
+        """
         if isinstance(obj, CachedInstance):
             if callable(self.default):
                 return self.default()
@@ -160,7 +192,72 @@ class Related(marshmallow.fields.Nested):
         return super().serialize(attr, obj, accessor)
 
     def _deserialize(self, value, attr, data):
+        """
+        Deserialize input.
+        :param value:
+        :param attr:
+        :param data:
+        :return:
+
+        This is going to be a bit tricky to implement.  There's a few possibilities here:
+
+        For *-to-one relationships:
+        There's a chance that the client may want to simply change what instance of an object we point to.  In that
+        case, we should see an appropriate _link attribute and retrieve that instance (to verify its existence) or
+        throw a validation error.
+
+        The client might also want to alter the nested object -- or potentially even create a brand new one.  We need
+        a way to differentiate these two events -- likely by something special with the _link attribute.  Perhaps
+        _link = None for the 'create' case, but then a buggy client might inadvertently start creating items when it
+        doesn't mean to.
+
+        Lastly, the client might want to un-associate the related instance -- or it might want to delete the related
+        instance.
+
+        For *-to-many relationships:
+        We have all of the above possibilities, but they apply to every item on the list.
+
+        Additionally, there's the question of what the list itself is:
+        * Is it a list of changes to apply, or
+        * Does it completely replace the original list?
+
+        Proposed solution:
+
+        Individual item within the list, or the individual item if this isn't a list, have an _action attribute.
+
+        It can have the following values:
+            'link': Change linkage only.  Does not modify any attributes of the linked object.  This is the default
+                if no actual fields are present.
+                _link must be specified and non-NULL.
+            'merge': In addition to changing the linkage, apply modifications to the linked object.  This is the
+                default if fields are present in the response.
+                _link must be specified and non-NULL.
+            'create': Create a new instance, apply the modifications to it, and link it.
+                _link must be NULL if specified, unless writable primary keys are allowed.
+            'replace': Create a new instance, apply the modifications to it, and link it.  If an object already
+                existed at the specified _link, it is removed first.
+                _link must be specified and non-NULL.
+            'upsert': Create a new instance, apply the modifications to it, and link it.  If an object already existed,
+                merge instead.
+                _link must be specified and non-NULL.
+            'unlink': Unlink associated item (set reference to NULL).
+                _link must be either be NULL or exactly match the linked instance if specified.
+                Within a list, _link cannot be NULL.
+            'delete': Delete the associated item.
+                _link must be either be NULL or exactly match the linked instance if specified.
+                Within a list, _link cannot be NULL.
+
+            Certain actions can be followed by a question mark (e.g. 'create?') to modify their behavior:
+            'create?': Does not fail if an object already exists at the same URL, does nothing instead.
+            'unlink?': Does not fail if the _link did not match, does nothing instead.
+            'delete?': Does not fail if the _link did not match, does nothing instead.
+
+        The list itself may specify an _action as well:
+            'patch': Apply items in this list as patches against the actual list.
+            'replace': Replace the entire collection with the new list.  Items in the new list should not specify
+        """
         raise ValueError("TODO: Find a way to implement deserialize in a sane manner.")
+        pass
 
     def relation_url(self, attr, obj):
         """
@@ -176,7 +273,7 @@ class Related(marshmallow.fields.Nested):
         suffix = info.get('suffix')
         if suffix is None:
             suffix = attr
-        return self.parent.opts.translate.url_for(obj) + "/" + suffix
+        return self.parent.translate.url_for(obj) + "/" + suffix
 
 
 class URLTranslator:
@@ -486,10 +583,152 @@ class SchemaMeta(marshmallow_sqlalchemy.schema.ModelSchemaMeta):
         return fields
 
 
+class SortedDict(collections.UserDict):
+    """
+    Dictionary of sorted keys.
+
+    Unlike OrderedDict, where keys are sorted by insertion order, SortedDicts create and sorts a list of all keys when
+    needed.
+    """
+    def __init__(self, key=None, reverse=False, iterable=None):
+        """
+        Creates a new SortedDict.
+
+        :param key: As per the corresponding argument of sorted()
+        :param reverse: As per the corresponding argument of sorted()
+        """
+        self._keys = None
+        self._sortfn = functools.partial(sorted, key=key, reverse=reverse)
+        super().__init__(iterable)
+
+    def sort(self):
+        """
+        Stable sort of dictionary keys *IN PLACE*
+        """
+        self._keys = list(self._sortfn(self.data.keys()))
+
+    def __setitem__(self, key, item):
+        if key not in self:
+            self._keys = None
+        return super().__setitem__(key, item)
+
+    def __delitem__(self, key):
+        if key in self:
+            self._keys = None
+        return super().__delitem__(key)
+
+    def __iter__(self):
+        if self._keys is None:
+            self.sort()
+        try:
+            for k in self.data:
+                if self._keys is None:
+                    raise RuntimeError("Dictionary keys modified during iteration.")
+                yield k
+        except KeyError:
+            raise RuntimeError("Dictionary keys modified during iteration.")
+
+
+class Scope(tuple):
+    """
+    CONFIGURATION SCOPES:
+    Since returned results may end up being heavily nested, configuration directives all have a scope that they apply to:
+
+    '*' applies to all schemas.
+    'typename' applies to all schemas that are looking at a particular typename.
+    'typename/parent' applies to schema instances created by typename's 'parent' Related field.
+    'typename/*' applies to all schema instances created by any Related field on typename.
+
+    Scopes can be nested, e.g. 'typename/parent/grandparent' refers to Typename's parent's grandparent schema.
+
+    '*' wildcards must be the final component of the scope.
+
+    Scopes beginning with '/' are anchored to the top-level schema.  '/*' refers to all top-level schemas (regardless of
+    type)
+
+    PRECEDENCE:
+    When conflicting options are defined at multiple scopes, the following algorithm chooses the winner:
+
+    The 'longest' scope is chosen first, determined by counting the number of slashes.  'a/b' is thus longer than 'foobar'
+
+    If there's a tie for longest scope, a rooted scope (leading /) wins
+
+    If there's still a tie, a non-wildcard scope wins over a non-wildcard scope.
+    """
+    def __new__(cls, s):
+        rv = super().__new__(cls, [s[0] == '/'] + list(filter(None, reversed(s.split("/")))))
+        setattr(rv, '_key', 3*len(rv) + (1 if rv[0] else 0) + (0 if rv[1] == '*' else 1))
+        return rv
+
+    def __str__(self):
+        return ('/' if self[0] else '') + "/".join(self[:0:-1])  # Slice syntax: All but the first item of the iter, reversed
+
+    def __repr__(self):
+        return "{}({!r})".format(type(self).__name__, str(self))
+
+    def applies_to(self, schema):
+        """
+        Returns TRUE if this scope applies to the specified schema.
+
+        :param schema: Schema
+        :return: True or False
+        """
+        last = len(self) - 1
+        for ix in range(1, len(self)):
+            if ix == last:
+                if self[0] and schema.adopted_parent is not None:
+                    return False  # We're rooted, and the schema wasn't.
+                name = schema.typename
+            else:
+                if schema.adopted_parent is None:  # We have no parent, but there's at least one more level to go.
+                    return False
+                name = schema.adopted_relation
+            if name is None:  # We have no name
+                return False
+            if not ((ix == 1 and self[ix] == '*') or self[ix] == name):
+                return False
+            if ix != last:
+                schema = schema.adopted_parent
+        return True
+
+    def __eq__(self, other):
+        return type(self) == type(other) and super().__eq__(other)
+
+    def __hash__(self):
+        return super().__hash__() ^ 41207233  # a
+
+
+class ScopedOption(SortedDict):
+    _keyfunc = operator.attrgetter('_key')
+
+    def __init__(self, *args, **kwargs):
+        iterable = dict(args, **kwargs)
+        super().__init__(key=self._keyfunc, reverse=False, iterable=iterable)
+
+    def matching_scope(self, schema):
+        for scope in self.keys():
+            if scope.applies_to(schema):
+                return scope
+        return None
+
+    def value_for(self, schema, default=_MISSING):
+        scope = self.matching_scope(schema)
+        if scope is None:
+            if default is _MISSING:
+                raise KeyError("No value was found that matches this schema's scope.")
+            return default
+        return self[scope]
+
+
 class SchemaState:
     """
     Defines state that is common to a given instance of a Schema and all of its children.
+
+    :ivar catalog: Catalog of previously-cached instances.  Dict of { RealInstance: CachedInstance }
     """
+    instance_permissions = {'link', 'merge', 'create', 'replace', 'upsert', 'unlink', 'delete', 'modify'}
+    collection_permissions = {'patch', 'replace'}
+
     def __init__(self, catalog=None):
         """
         Creates a new SchemaState
@@ -499,6 +738,12 @@ class SchemaState:
         if catalog is None:
             catalog = {}
         self.catalog = catalog
+        self.options = {}
+        self._scopes = {}
+        self.setscope('*', {"can_{}".format(permission): False for permission in self.instance_permissions})
+        self.setscope('*', {"can_collection_{}".format(permission): True for permission in self.instance_permissions})
+        self.setscope('/*', {"can_collection_{}".format(permission): False for permission in self.instance_permissions})
+        self.setscope('*', {"can_{}".format(permission): False for permission in self.collection_permissions})
 
     def cache(self, obj, fields):
         """
@@ -521,6 +766,54 @@ class SchemaState:
         self.catalog.update(other.catalog)
         return self
 
+    def get(self, option, schema, default=_MISSING):
+        """
+        Returns an option value that is within the schema's scope.
+        :param option: Option name
+        :param schema: Schema to test
+        :param default: Default value if option not defined.
+        :return: Defined option
+        """
+        opt = self.options.get(option)
+        if opt is None:
+            if default is _MISSING:
+                raise KeyError("Option '{}' is not defined in any scopes.".format(option))
+            return default
+        return opt.value_for(schema)
+
+    def set(self, scope, option, value):
+        """
+        Sets a single option in a single scope.
+        :param scope: Scope
+        :param option: Option name
+        :param value: Value
+        :return: None
+        """
+        scope = self._scope(scope)
+        if option not in self.options:
+            self.options[option] = ScopedOption()
+        self.options[option][scope] = value
+
+    def setscope(self, scope, options):
+        """
+        Sets a dictionary of option in a single scope.  Updates any existing options present.
+        :param scope: Scope
+        :param options: Dictionary of {option: value}
+        :return: None
+        """
+        scope = self._scope(scope)
+        for option, value in options.items():
+            if option not in self.options:
+                self.options[option] = ScopedOption()
+            self.options[option][scope] = value
+
+    def _scope(self, s):
+        if isinstance(s, Scope):
+            return s
+        if s not in self._scopes:
+            self._scopes[s] = Scope(s)
+        return self._scopes[s]
+
 
 # noinspection PyAbstractClass
 class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
@@ -528,34 +821,48 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
     Our custom Schema base class.
 
     :cvar OPTIONS_CLASS: Defines what class defines SchemaOptions.
-    :ivar serialize_parent: Refers to the parent schema.  We don't use 'parent' since marshmallow presumably uses it
+    :ivar adopted_parent: Refers to the parent schema.  We don't use 'parent' since marshmallow presumably uses it
         for other things.
+    :ivar adopted_relation: Name for the relationship that our parent uses to connect to us.
     :ivar state: A SchemaState representing shared global state.
     """
     OPTIONS_CLASS = SchemaOptions
-    serialize_parent = None
+    adopted_parent = None
+    adopted_relation = None
 
-    def adopt_parent(self, parent):
+    @property
+    def translate(self):
+        return self.opts.translate
+
+    @property
+    def typename(self):
+        return self.translate.typename
+
+    def adopt_parent(self, parent, relation):
         """
         Set our parent schema to parent.
 
         Since implementation details mean this method is called multiple times, this is a no-op if we already have
         a parent defined and it's the same parent.
+
+        :param parent: Parent schema to adopt
+        :param relation: Relation that connected our parent to us
         :raises: ValueError if a parent is already defined and doesn't match the specified parent.
         """
-        if self.serialize_parent is None:
+        if self.adopted_parent is None:
             self.state = parent.state.merge(self.state)
-            self.path = parent.path + "." + self.path
-            self.serialize_parent = parent
-        elif self.serialize_parent is not parent:
+            self.adopted_relation = relation
+        elif self.adopted_parent is not parent:
             raise ValueError("Schema already has a parent.")
-        return self.serialize_parent
+        elif self.adopted_relation is not relation:
+            raise ValueError("Schema already adopted via a different relation.")
+        return self.adopted_parent
 
     def cache(self, obj):
         """
         Forwards to self.state.cache
         """
-        return self.state.cache(obj, self.opts.translate.fields)
+        return self.state.cache(obj, self.translate.fields)
 
     def __init__(self, *args, **kwargs):
         """
@@ -563,13 +870,11 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
 
         :param state: If specified, determines the SchemaState we have.
         :param catalog: If specified, determines the initial catalog.  Ignored if 'state' is present.
-        :param path: If specified, determines the root path name.  Defaults to self.opts.translate.typename.
         """
         super().__init__(*args, **kwargs)
         self.state = kwargs.pop('state', None)
         if self.state is None:
             self.state = SchemaState(catalog=kwargs.pop('catalog', None))
-        self.path = kwargs.pop('path', self.opts.translate.typename)
 
     def dump(self, obj, many=None, *args, **kwargs):
         """
@@ -585,62 +890,10 @@ class Schema(marshmallow_sqlalchemy.schema.ModelSchema, metaclass=SchemaMeta):
         url = data.get('_link')
         if url is None:
             return None
-        return self.session.query(self.opts.model).filter(self.opts.translate.expression_from(url=url)).first()
+        return self.session.query(self.opts.model).filter(self.translate.expression_from(url=url)).first()
 
     def load(self, data, session=None, instance=None, *args, **kwargs):
         return super().load(data, session, instance, *args, **kwargs)
 
-    # def load(self, data, session=None, instance=None, *args, **kwargs):
-    #     """Deserialize data to internal representation.
-    #
-    #     :param session: Optional SQLAlchemy session.
-    #     :param instance: Optional existing instance to modify.
-    #     """
-    #     self.session = session or self.session
-    #     self.instance = instance or self.instance
-    #     if not self.session:
-    #         raise ValueError('Deserialization requires a session')
-    #     return super(ModelSchema, self).load(data, *args, **kwargs)
-    #
-
-
-# At some point during model conversion
-# Find all RelationshipProperties
-# for property in inspect(model).iterate_properties: if property.hasattr('direction')...
-
-# Check info dictionary.
-# uselist = info.get('uselist')
-# if uselist is None: uselist = not direction.name.endswith('ONE')
-
-# If not uselist:
-# We should have the full primary key of the remote end, and know how to map it:
-# Generate URLs using:
-#   property.mapper.opts.translate  # Remote side's URLTranslator
-#   remap = { remote.name: local.name for local, remote in property.local_remote_pairs }
-
-# If uselist:
-# Determine a URL that identifies the collection as a whole.
-# First option: info['url'] determines entire URL, if present.
-# Second option: info['suffix'] determines URL added to our existing URL (with a /)
-# Third option: As above, but with suffix = property.key
-
-
-# During serialization:
-# For relationship properties:
-# output = {}
-# Is the property a list?
-# If yes:
-    # output['_link'] = url
-    # output['_list'] = True
-    # Is property loaded?
-    # If no:
-    #   output['_items'] = None
-    # Else:
-    # output['_items'] = [dump_item_somehow for item in items]
-
-# If no:
-    # Is item loaded?
-    # If no:
-        # output['_link'] = url_using_remap
-    # Otherwise:
-        # dump item
+    def get(self, option, default=_MISSING):
+        return self.state.get(option, self, default)
