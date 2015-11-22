@@ -35,7 +35,7 @@ def ping_connection(connection, branch):
         # run a SELECT 1.   use a core select() so that
         # the SELECT of a scalar value without a table is
         # appropriately formatted for the backend
-        connection.scalar(sql.select[1])
+        connection.scalar(sql.select((1,)))
     except exc.DBAPIError as err:
         # catch SQLAlchemy's DBAPIError, which is a wrapper
         # for the DBAPI's exception.  It includes a .connection_invalidated
@@ -47,7 +47,7 @@ def ping_connection(connection, branch):
             # itself and establish a new connection.  The disconnect detection
             # here also causes the whole connection pool to be invalidated
             # so that all stale connections are discarded.
-            connection.scalar(sql.select([1]))
+            connection.scalar(sql.select((1,)))
             print("Successfully resurrected a database connection.")
         else:
             raise

@@ -22,6 +22,9 @@ import datetime
 from latci import config
 import latci.schema
 
+import collections.abc
+collections.abc.Mapping
+
 
 @as_declarative()
 class Model():
